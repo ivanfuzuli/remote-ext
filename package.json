@@ -17,11 +17,13 @@
   },
   "homepage": "https://github.com/ivanfuzuli/remote-ext#readme",
   "devDependencies": {
+    "css-loader": "^3.1.0",
     "cz-conventional-changelog": "^3.0.2",
+    "file-loader": "^4.1.0",
     "mini-css-extract-plugin": "^0.8.0",
-    "webpack": "^4.36.1"
+    "webpack": "^4.36.1",
+    "webpack-cli": "^3.3.6"
   },
-
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
