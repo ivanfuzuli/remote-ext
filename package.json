@@ -1,0 +1,30 @@
+{
+  "name": "tv-remote",
+  "version": "0.0.1",
+  "description": "TV Remote Controller's browserside",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ivanfuzuli/remote-ext.git"
+  },
+  "author": "Can K.",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ivanfuzuli/remote-ext/issues"
+  },
+  "homepage": "https://github.com/ivanfuzuli/remote-ext#readme",
+  "devDependencies": {
+    "cz-conventional-changelog": "^3.0.2",
+    "mini-css-extract-plugin": "^0.8.0",
+    "webpack": "^4.36.1"
+  },
+
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}
