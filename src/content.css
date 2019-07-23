@@ -1,0 +1,11 @@
+.can-selected {
+  border: 4px solid yellowgreen;
+  min-height: 20px;
+  min-width: 20px;
+
+  width: 100px;
+  height: 50px;
+
+  position: absolute;
+  z-index: 99999;
+}
