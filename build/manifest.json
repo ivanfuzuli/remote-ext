@@ -1,0 +1,27 @@
+
+{
+    "name": "TV Remote",
+    "version": "0.0.1",
+    "description": "TV Remote App Helper",
+    "icons": {
+      "16": "icons/tv-16.png",
+      "24": "icons/tv-24.png",
+      "48": "icons/tv-48.png",
+      "128": "icons/tv-128.png"
+    },
+  
+    "background": {
+      "scripts": ["assets/background.bundle.js"]
+    },
+  
+    "content_scripts": [
+      { "matches": ["<all_urls>"], 
+        "js": ["assets/content.bundle.js"], 
+        "css": ["assets/content.bundle.css"]
+      }
+    ],
+  
+    "permissions":["*://*/*", "<all_urls>", "management"],
+    
+    "manifest_version": 2
+  }
