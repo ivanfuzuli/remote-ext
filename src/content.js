@@ -1,5 +1,9 @@
 import difference from 'lodash/difference';
+import Mapper from './mapper.js';
+import Keyboard from './keyboard.js';
 import content from './content.css';
+
+new Keyboard();
 
 let links = document.querySelectorAll('a');
 
@@ -10,6 +14,7 @@ const options = {
 }
 
 const updateObservers = () => {
+  return;
   const newLinks = document.querySelectorAll('a');
   const diff = difference(newLinks, links);
   diff.forEach((elm) => {
@@ -20,11 +25,7 @@ const updateObservers = () => {
 }
 
 const callback = (entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      console.log('visible', entry.target);
-    }
-  });
+  Mapper.map(entries);
 };
 const observer = new IntersectionObserver(callback, options);
 
@@ -39,7 +40,6 @@ window.addEventListener('load', () => {
   const selected = document.createElement('div');
   selected.classList.add('can-selected');
   document.body.appendChild(selected);
-  console.log('selected', selected);
 });
 
 // TODO: Only development
