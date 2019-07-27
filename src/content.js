@@ -1,20 +1,34 @@
 import difference from 'lodash/difference';
 import Mapper from './mapper.js';
 import Keyboard from './keyboard.js';
-import content from './content.css';
+import DomObserver from './dom-observer.js';
+import domObserver from './dom-observer.js';
 
-new Keyboard();
+import './content.css';
+
+const keyboard = new Keyboard();
 
 let links = document.querySelectorAll('a');
-
-const options = {
+keyboard.bindDomElements(links);
+console.log('keyboard', keyboard);
+const interSectionOptions = {
   root: null,
   rootMargin: '0px',
   threshold: .5
 }
 
-const updateObservers = () => {
-  return;
+const interSectionCB = (entries) => {
+  Mapper.map(entries);
+};
+
+const observer = new IntersectionObserver(interSectionCB, interSectionOptions);
+
+links.forEach((link) => {
+  observer.observe(link);
+});
+
+function updateObservers() {
+  console.log('observer updated');
   const newLinks = document.querySelectorAll('a');
   const diff = difference(newLinks, links);
   diff.forEach((elm) => {
@@ -22,19 +36,10 @@ const updateObservers = () => {
   });
 
   links = newLinks;
+  keyboard.bindDomElements(links);
 }
 
-const callback = (entries) => {
-  Mapper.map(entries);
-};
-const observer = new IntersectionObserver(callback, options);
-
-links.forEach((link) => {
-  observer.observe(link);
-});
-
-
-window.addEventListener('scroll', updateObservers);
+domObserver(updateObservers);
 
 window.addEventListener('load', () => {
   const selected = document.createElement('div');

@@ -8,6 +8,8 @@ import imgEnter from './img/keyboard/enter.svg';
 
 class Keyboard {
   constructor () {
+    this.domElements = [];
+    this.currentElement = null;
     this.KEYMAPPING = {
       '37': 'left',
       '38': 'up',
@@ -27,12 +29,40 @@ class Keyboard {
     this.bindPress();
   }
 
+  bindDomElements(elements) {
+    this.domElements = elements;
+  }
+
+  focus() {
+
+
+  }
+
+  navigate(direction) {
+    if (!this.currentElement) {
+      this.currentElement = this.bindedElements[0];
+    }
+
+    switch (direction) {
+      case 'right':
+        break;
+      case 'down':
+        break; 
+      case 'up':
+        break;
+    }
+
+    this.focus();
+  }
+
   bindPress () {
     window.addEventListener('keydown', (evt) => {
       const keyCode = evt.keyCode;
 
       if (keyCode in this.KEYMAPPING) {
         const direction = this.KEYMAPPING[keyCode];
+        this.navigate(direction);
+
         this.animateArrow(direction);
         evt.preventDefault();
       }
@@ -57,7 +87,6 @@ class Keyboard {
   }
 
   unAnimateArrow(direction) {
-    console.log('unregister', direction);
     const elm = this.bindedElements[direction];
     elm.classList.remove('can-layout__active');
   }
