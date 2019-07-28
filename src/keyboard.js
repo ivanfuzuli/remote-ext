@@ -1,5 +1,10 @@
 import debounce from 'lodash/debounce';
 
+import chain from 'lodash/chain';
+import sortBy from 'lodash/sortBy';
+import filter from 'lodash/filter';
+import head from 'lodash/head';
+
 import imgUp from './img/keyboard/up.svg';
 import imgDown from './img/keyboard/down.svg';
 import imgLeft from './img/keyboard/left.svg';
@@ -8,6 +13,8 @@ import imgEnter from './img/keyboard/enter.svg';
 
 class Keyboard {
   constructor () {
+    this.filteredEntries = [];
+    this.currentElement = null;
     this.KEYMAPPING = {
       '37': 'left',
       '38': 'up',
@@ -27,12 +34,39 @@ class Keyboard {
     this.bindPress();
   }
 
+  bindEntries(entries) {
+    console.log('binded', entries);
+    this.filteredEntries = entries;
+  }
+
+  focus() {
+
+  }
+
+  navigate(direction) {
+    
+    console.log(direction, this.filteredEntries);
+
+    switch (direction) {
+      case 'right':
+        break;
+      case 'down':
+        break; 
+      case 'up':
+        break;
+    }
+
+    this.focus();
+  }
+
   bindPress () {
     window.addEventListener('keydown', (evt) => {
       const keyCode = evt.keyCode;
 
       if (keyCode in this.KEYMAPPING) {
         const direction = this.KEYMAPPING[keyCode];
+        this.navigate(direction);
+
         this.animateArrow(direction);
         evt.preventDefault();
       }
@@ -57,7 +91,6 @@ class Keyboard {
   }
 
   unAnimateArrow(direction) {
-    console.log('unregister', direction);
     const elm = this.bindedElements[direction];
     elm.classList.remove('can-layout__active');
   }
