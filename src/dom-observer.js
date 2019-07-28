@@ -4,9 +4,10 @@ import debounce from 'lodash/debounce';
 const domObserver = function(whenUpdated) {
   const debounced = debounce(whenUpdated, 100);
   
-  const mutationCB = (elements) => {
+  const mutationCB = () => {
    debounced();
   }
+
   const observer = new MutationObserver(mutationCB);
 
   const options = { attributes: true, childList: false, subtree: true, attributeFilter:['href'] };

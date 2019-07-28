@@ -1,5 +1,10 @@
 import debounce from 'lodash/debounce';
 
+import chain from 'lodash/chain';
+import sortBy from 'lodash/sortBy';
+import filter from 'lodash/filter';
+import head from 'lodash/head';
+
 import imgUp from './img/keyboard/up.svg';
 import imgDown from './img/keyboard/down.svg';
 import imgLeft from './img/keyboard/left.svg';
@@ -8,7 +13,7 @@ import imgEnter from './img/keyboard/enter.svg';
 
 class Keyboard {
   constructor () {
-    this.domElements = [];
+    this.filteredEntries = [];
     this.currentElement = null;
     this.KEYMAPPING = {
       '37': 'left',
@@ -29,19 +34,18 @@ class Keyboard {
     this.bindPress();
   }
 
-  bindDomElements(elements) {
-    this.domElements = elements;
+  bindEntries(entries) {
+    console.log('binded', entries);
+    this.filteredEntries = entries;
   }
 
   focus() {
 
-
   }
 
   navigate(direction) {
-    if (!this.currentElement) {
-      this.currentElement = this.bindedElements[0];
-    }
+    
+    console.log(direction, this.filteredEntries);
 
     switch (direction) {
       case 'right':
