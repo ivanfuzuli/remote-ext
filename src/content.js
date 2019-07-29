@@ -1,3 +1,5 @@
+import extendArray from './extend-array.js';
+
 import difference from 'lodash/difference';
 import Keyboard from './keyboard.js';
 import bindIntersectionObservers from './intersection-observer.js';
@@ -5,6 +7,7 @@ import domObserver from './dom-observer.js';
 
 import './content.css';
 
+extendArray();
 const keyboard = new Keyboard();
 
 function init() {

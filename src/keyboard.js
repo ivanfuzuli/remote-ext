@@ -1,6 +1,4 @@
 import debounce from 'lodash/debounce';
-
-import _ from 'lodash/core';
 import head from 'lodash/head';
 
 import imgUp from './img/keyboard/up.svg';
@@ -49,8 +47,8 @@ class Keyboard {
     const $indicator = this.$indicator;
     const { top, left, width, height} = currentItem;
 
-    $indicator.style.top = top + 'px';  
-    $indicator.style.left = left + 'px';  
+    const transform = `translate(${left}px, ${top}px)`; 
+    $indicator.style.transform = transform; 
     $indicator.style.width = width + 'px';
     $indicator.style.height = height + 'px'; 
   }
@@ -62,7 +60,7 @@ class Keyboard {
   
     switch (direction) {
       case 'left':
-        nextItem = _(filteredEntries)
+        nextItem = filteredEntries
         .filter((item) => {
           return this.currentItem.centerX > item.centerX;
         })
@@ -73,7 +71,7 @@ class Keyboard {
         break;
 
       case 'right':
-        nextItem = _(filteredEntries)
+        nextItem = filteredEntries
         .filter((item) => {
           return this.currentItem.centerX < item.centerX;
         })
