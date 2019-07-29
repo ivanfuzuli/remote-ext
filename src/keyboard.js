@@ -11,9 +11,10 @@ import imgLeft from './img/keyboard/left.svg';
 import imgRight from './img/keyboard/right.svg';
 import imgEnter from './img/keyboard/enter.svg';
 
+let filteredEntries = [];
+
 class Keyboard {
   constructor () {
-    this.filteredEntries = [];
     this.currentElement = null;
     this.KEYMAPPING = {
       '37': 'left',
@@ -34,18 +35,17 @@ class Keyboard {
     this.bindPress();
   }
 
-  bindEntries(entries) {
-    console.log('binded', entries);
-    this.filteredEntries = entries;
-  }
-
   focus() {
 
   }
 
+  bindEntriesGetter(entries) {
+    filteredEntries = entries;
+  }
+
   navigate(direction) {
     
-    console.log(direction, this.filteredEntries);
+    console.log(direction, filteredEntries);
 
     switch (direction) {
       case 'right':

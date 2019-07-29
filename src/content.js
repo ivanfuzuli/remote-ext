@@ -9,8 +9,7 @@ const keyboard = new Keyboard();
 
 function init() {
   const allItems = document.querySelectorAll('a');
-  let { filteredEntries, observer } = bindIntersectionObservers();
-  keyboard.bindEntries(filteredEntries);
+  let { observer } = bindIntersectionObservers(keyboard.bindEntriesGetter);
   function updateObservers() {
     const newAllItems = document.querySelectorAll('a');
     const diff = difference(newAllItems, allItems);
