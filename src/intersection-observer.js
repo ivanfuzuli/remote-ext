@@ -1,5 +1,7 @@
-function bindIntersectionObservers() {
-  const allItems = document.querySelectorAll('a');
+import unionBy from 'lodash/unionBy';
+
+function bindIntersectionObservers(bindEntriesGetter) {
+  const domItems = document.querySelectorAll('a');
   let filteredEntries = [];
 
   const interSectionOptions = {
@@ -9,46 +11,40 @@ function bindIntersectionObservers() {
   }
 
   const interSectionCB = (entries) => {
-    const willRemove = [];
-    entries.forEach((entry) => {
-      if (entry.isIntersecting === true) {
-        const { top, left, width, height } = entry.boundingClientRect;
-        const centerX = left + width / 2;
-        const centerY = top + height / 2;
-        const obj = {
-          top,
-          left,
-          centerX,
-          centerY,
-          $target: entry.target
-        };
+    const mappedEntries = entries.map(entry => {
+      const $target = entry.target;
+      const isIntersecting = entry.isIntersecting;
+      const { top, left, width, height } = entry.boundingClientRect;
+      const centerX = left + width / 2;
+      const centerY = top + height / 2;
 
-        filteredEntries.push(obj);
-        } else {
-          willRemove.push(entry.target);
-        }
+      return {
+        top,
+        left,
+        centerX,
+        centerY,
+        isIntersecting,
+        $target
+      };
     });
 
-
-    if (willRemove.length > 0) {
-      filteredEntries = filteredEntries.filter((entry) => {
-        if (entry.target in willRemove) {
-          return false;
-        }
-
-        return true;
-      })
-    }
+    filteredEntries = unionBy(mappedEntries, filteredEntries, item => item.$target)
+                      .filter(item => item.isIntersecting);
   };
 
+  
   const observer = new IntersectionObserver(interSectionCB, interSectionOptions);
 
-  allItems.forEach((link) => {
+  domItems.forEach((link) => {
     observer.observe(link);
   });
 
+  const getFilteredEntries = () => {
+    console.log('calledmesoul');
+    return filteredEntries;
+  }
   return { 
-    filteredEntries,
+    getFilteredEntries,
     observer
   }
 }
