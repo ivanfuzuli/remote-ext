@@ -1,8 +1,6 @@
 import debounce from 'lodash/debounce';
 
-import chain from 'lodash/chain';
-import sortBy from 'lodash/sortBy';
-import filter from 'lodash/filter';
+import _ from 'lodash/core';
 import head from 'lodash/head';
 
 import imgUp from './img/keyboard/up.svg';
@@ -11,11 +9,14 @@ import imgLeft from './img/keyboard/left.svg';
 import imgRight from './img/keyboard/right.svg';
 import imgEnter from './img/keyboard/enter.svg';
 
-let filteredEntries = [];
-
 class Keyboard {
   constructor () {
-    this.currentElement = null;
+    this.currentItem = null;
+    this.getFilteredEntries = null;
+    
+    this.$container = null;
+    this.$indicator = null;
+
     this.KEYMAPPING = {
       '37': 'left',
       '38': 'up',
@@ -31,24 +32,55 @@ class Keyboard {
       down: false,
       enter: false
     };
+
     this.bindedElements = this.createLayout();
     this.bindPress();
   }
 
-  focus() {
-
+  setCurrentDefault() {
+    if (!this.currentItem) {
+      const filteredEntries = this.getFilteredEntries();
+      this.currentItem = head(filteredEntries);
+    }
   }
 
-  bindEntriesGetter(entries) {
-    filteredEntries = entries;
+  focus() {
+    const currentItem = this.currentItem;
+    const $indicator = this.$indicator;
+    const { top, left, width, height} = currentItem;
+
+    $indicator.style.top = top + 'px';  
+    $indicator.style.left = left + 'px';  
+    $indicator.style.width = width + 'px';
+    $indicator.style.height = height + 'px'; 
   }
 
   navigate(direction) {
-    
-    console.log(direction, filteredEntries);
-
+    this.setCurrentDefault();
+    const filteredEntries = this.getFilteredEntries();
+    let nextItem;
+  
     switch (direction) {
+      case 'left':
+        nextItem = _(filteredEntries)
+        .filter((item) => {
+          return this.currentItem.centerX > item.centerX;
+        })
+        .sortBy((item) => {
+          return item.left
+        })
+        .head();
+        break;
+
       case 'right':
+        nextItem = _(filteredEntries)
+        .filter((item) => {
+          return this.currentItem.centerX < item.centerX;
+        })
+        .sortBy((item) => {
+          return item.top
+        })
+        .head();
         break;
       case 'down':
         break; 
@@ -56,6 +88,9 @@ class Keyboard {
         break;
     }
 
+    if (!nextItem) return;
+    this.currentItem = nextItem;
+  
     this.focus();
   }
 
@@ -100,6 +135,8 @@ class Keyboard {
   }
 
   createLayout() {
+    const $indicator = document.createElement('div');
+  
     const container = document.createElement('div');
     const middle = document.createElement('div');
 
@@ -122,7 +159,10 @@ class Keyboard {
     up.classList.add('can-layout__icon');
     down.classList.add('can-layout__icon');
     enter.classList.add('can-layout__icon');
+  
     middle.classList.add('can-layout__middle');
+
+    $indicator.classList.add('can-selected');
 
     middle.appendChild(left);
     middle.appendChild(enter);
@@ -132,6 +172,9 @@ class Keyboard {
     container.appendChild(middle);
     container.appendChild(down);
     
+    document.body.appendChild($indicator);
+
+    this.$indicator = $indicator;
 
     window.addEventListener('load', () => {
       document.body.appendChild(container);

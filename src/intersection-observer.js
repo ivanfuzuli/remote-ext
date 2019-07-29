@@ -23,6 +23,8 @@ function bindIntersectionObservers(bindEntriesGetter) {
         left,
         centerX,
         centerY,
+        height,
+        width,
         isIntersecting,
         $target
       };
@@ -40,9 +42,9 @@ function bindIntersectionObservers(bindEntriesGetter) {
   });
 
   const getFilteredEntries = () => {
-    console.log('calledmesoul');
     return filteredEntries;
   }
+
   return { 
     getFilteredEntries,
     observer
