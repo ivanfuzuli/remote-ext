@@ -31,7 +31,13 @@ function bindIntersectionObservers(bindEntriesGetter) {
     });
 
     filteredEntries = unionBy(mappedEntries, filteredEntries, item => item.$target)
-                      .filter(item => item.isIntersecting);
+                      .filter(item => item.isIntersecting)
+                      .map((item, index) => {
+                        return {
+                          ...item,
+                          $index: index
+                        }
+                      });
   };
 
   

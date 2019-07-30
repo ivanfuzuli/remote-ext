@@ -1,6 +1,4 @@
 import debounce from 'lodash/debounce';
-
-import _ from 'lodash/core';
 import head from 'lodash/head';
 
 import imgUp from './img/keyboard/up.svg';
@@ -8,6 +6,16 @@ import imgDown from './img/keyboard/down.svg';
 import imgLeft from './img/keyboard/left.svg';
 import imgRight from './img/keyboard/right.svg';
 import imgEnter from './img/keyboard/enter.svg';
+import extendArray from './extend-array.js';
+
+extendArray();
+
+function calcDistance(x1, y1, x2, y2) {
+  var a = x1 - x2;
+  var b = y1 - y2;
+
+  return Math.sqrt( a*a + b*b );
+}
 
 class Keyboard {
   constructor () {
@@ -44,54 +52,138 @@ class Keyboard {
     }
   }
 
-  focus() {
-    const currentItem = this.currentItem;
+  focus(nextItem) {
     const $indicator = this.$indicator;
-    const { top, left, width, height} = currentItem;
+    const { top, left, width, height} = nextItem;
 
-    $indicator.style.top = top + 'px';  
-    $indicator.style.left = left + 'px';  
+    const transform = `translate(${left}px, ${top}px)`; 
+    $indicator.style.transform = transform; 
     $indicator.style.width = width + 'px';
     $indicator.style.height = height + 'px'; 
   }
 
-  navigate(direction) {
-    this.setCurrentDefault();
-    const filteredEntries = this.getFilteredEntries();
+  calcNextItem({filteredEntries, currentItem, direction}) {
     let nextItem;
-  
-    switch (direction) {
-      case 'left':
-        nextItem = _(filteredEntries)
-        .filter((item) => {
-          return this.currentItem.centerX > item.centerX;
-        })
-        .sortBy((item) => {
-          return item.left
-        })
-        .head();
-        break;
 
-      case 'right':
-        nextItem = _(filteredEntries)
-        .filter((item) => {
-          return this.currentItem.centerX < item.centerX;
-        })
-        .sortBy((item) => {
-          return item.top
-        })
-        .head();
+
+    switch (direction) {
+      case 'left': {
+        let filteredOnlySameRow = filteredEntries
+          .filter((item) => {
+            return currentItem.centerX > item.centerX 
+                && currentItem.centerY === item.centerY;
+        });
+
+        if (filteredOnlySameRow.length < 1) {
+          filteredOnlySameRow = filteredEntries.filter(item => currentItem.centerX > item.centerX);
+        }
+        
+        const filtered = filteredOnlySameRow.map(item => {
+          return {
+            ...item,
+            distance: calcDistance(currentItem.centerX, currentItem.centerY, item.centerX, item.centerY)
+          }
+        });
+
+        const sorted = filtered
+        .sortBy('distance');
+
+        nextItem = sorted.head();
         break;
-      case 'down':
-        break; 
-      case 'up':
+      }
+
+      case 'right': {
+        let filteredOnlySameRow = filteredEntries
+          .filter((item) => {
+            return currentItem.centerX < item.centerX 
+                && currentItem.centerY === item.centerY;
+        });
+
+        if (filteredOnlySameRow.length < 1) {
+          filteredOnlySameRow = filteredEntries.filter(item => currentItem.centerX < item.centerX);
+        }
+        
+        const filtered = filteredOnlySameRow.map(item => {
+          return {
+            ...item,
+            distance: calcDistance(currentItem.centerX, currentItem.centerY, item.centerX, item.centerY)
+          }
+        });
+
+        const sorted = filtered
+        .sortBy('distance');
+        console.log('current', currentItem);
+        console.log('sorted', sorted);
+        nextItem = sorted.head();
         break;
+      }
+
+      case 'down': {
+        let filteredOnlySameRow = filteredEntries
+          .filter((item) => {
+            return currentItem.centerY < item.centerY 
+                && currentItem.centerX === item.centerX;
+        });
+
+        if (filteredOnlySameRow.length < 1) {
+          filteredOnlySameRow = filteredEntries.filter(item => currentItem.centerY < item.centerY);
+        }
+        
+        const filtered = filteredOnlySameRow.map(item => {
+          return {
+            ...item,
+            distance: calcDistance(currentItem.centerX, currentItem.centerY, item.centerX, item.centerY)
+          }
+        });
+
+        const sorted = filtered
+        .sortBy('distance');
+
+        nextItem = sorted.head();
+        break;
+      }
+      
+      case 'up': {
+        let filteredOnlySameRow = filteredEntries
+          .filter((item) => {
+            return currentItem.centerY > item.centerY 
+                && currentItem.centerX === item.centerX;
+        });
+
+        if (filteredOnlySameRow.length < 1) {
+          filteredOnlySameRow = filteredEntries.filter(item => currentItem.centerY > item.centerY);
+        }
+        
+        const filtered = filteredOnlySameRow.map(item => {
+          return {
+            ...item,
+            distance: calcDistance(currentItem.centerX, currentItem.centerY, item.centerX, item.centerY)
+          }
+        });
+
+        const sorted = filtered
+        .sortBy('distance');
+
+        nextItem = sorted.head();
+
+        break;
+      }
     }
 
-    if (!nextItem) return;
+    return nextItem;
+  }
+
+  navigate(direction) {
+    const $focus = this.focus.bind(this);
+    this.setCurrentDefault();
+    const currentItem = this.currentItem;
+    const filteredEntries = this.getFilteredEntries();
+
+    const nextItem = this.calcNextItem({filteredEntries, direction, currentItem});
+    if (!nextItem) return false;
+
     this.currentItem = nextItem;
-  
-    this.focus();
+    $focus(nextItem);
   }
 
   bindPress () {
