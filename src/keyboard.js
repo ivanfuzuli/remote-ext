@@ -98,18 +98,18 @@ class Keyboard {
       case 'left': {
         let filteredOnlySameRow = activeEntries
           .filter((item) => {
-            return currentItem.centerX > item.centerX 
-                && currentItem.centerY === item.centerY;
+            return currentItem.left > item.left 
+                && currentItem.top === item.top;
         });
 
         if (filteredOnlySameRow.length < 1) {
-          filteredOnlySameRow = activeEntries.filter(item => currentItem.centerX > item.centerX);
+          filteredOnlySameRow = activeEntries.filter(item => currentItem.left > item.left);
         }
         
         const filtered = filteredOnlySameRow.map(item => {
           return {
             ...item,
-            distance: calcDistance(currentItem.centerX, currentItem.centerY, item.centerX, item.centerY)
+            distance: calcDistance(currentItem.top, currentItem.left, item.top, item.left)
           }
         });
 
@@ -123,18 +123,18 @@ class Keyboard {
       case 'right': {
         let filteredOnlySameRow = activeEntries
           .filter((item) => {
-            return currentItem.centerX < item.centerX 
-                && currentItem.centerY === item.centerY;
+            return currentItem.left < item.left 
+                && currentItem.top === item.top;
         });
 
         if (filteredOnlySameRow.length < 1) {
-          filteredOnlySameRow = activeEntries.filter(item => currentItem.centerX < item.centerX);
+          filteredOnlySameRow = activeEntries.filter(item => currentItem.left < item.left);
         }
         
         const filtered = filteredOnlySameRow.map(item => {
           return {
             ...item,
-            distance: calcDistance(currentItem.centerX, currentItem.centerY, item.centerX, item.centerY)
+            distance: calcDistance(currentItem.left, currentItem.top, item.left, item.top)
           }
         });
 
@@ -147,18 +147,18 @@ class Keyboard {
       case 'down': {
         let filteredOnlySameRow = activeEntries
           .filter((item) => {
-            return currentItem.centerY < item.centerY 
-                && currentItem.centerX === item.centerX;
+            return currentItem.top < item.top 
+                && currentItem.top === item.top;
         });
 
         if (filteredOnlySameRow.length < 1) {
-          filteredOnlySameRow = activeEntries.filter(item => currentItem.centerY < item.centerY);
+          filteredOnlySameRow = activeEntries.filter(item => currentItem.top < item.top);
         }
         
         const filtered = filteredOnlySameRow.map(item => {
           return {
             ...item,
-            distance: calcDistance(currentItem.centerX, currentItem.centerY, item.centerX, item.centerY)
+            distance: calcDistance(currentItem.left, currentItem.top, item.left, item.top)
           }
         });
 
@@ -172,18 +172,18 @@ class Keyboard {
       case 'up': {
         let filteredOnlySameRow = activeEntries
           .filter((item) => {
-            return currentItem.centerY > item.centerY 
-                && currentItem.centerX === item.centerX;
+            return currentItem.top > item.top 
+                && currentItem.left === item.left;
         });
 
         if (filteredOnlySameRow.length < 1) {
-          filteredOnlySameRow = activeEntries.filter(item => currentItem.centerY > item.centerY);
+          filteredOnlySameRow = activeEntries.filter(item => currentItem.top > item.top);
         }
         
         const filtered = filteredOnlySameRow.map(item => {
           return {
             ...item,
-            distance: calcDistance(currentItem.centerX, currentItem.centerY, item.centerX, item.centerY)
+            distance: calcDistance(currentItem.left, currentItem.top, item.left, item.top)
           }
         });
 
@@ -209,8 +209,7 @@ class Keyboard {
     const { activeEntries, passiveEntries } = filteredEntries;
 
     const nextItem = this.calcNextItem({activeEntries, direction, currentItem});
-    console.log('curr', currentItem);
-    console.log('next', nextItem);
+
     if (!nextItem) return;
 
     this.currentItem = nextItem;
