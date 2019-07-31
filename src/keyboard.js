@@ -82,6 +82,26 @@ class Keyboard {
     this.focus(reset);
   }
 
+  calcNextEntryBy({activeEntries, currentItem, filterFn, filterFallbackFn}) {
+    let filteredOnlySameRow = activeEntries.filter(filterFn);
+    if (filteredOnlySameRow.length < 1) {
+      filteredOnlySameRow = activeEntries.filter(filterFallbackFn);
+    }
+  
+    const filtered = filteredOnlySameRow.map(item => {
+      return {
+        ...item,
+        distance: calcDistance(currentItem.top, currentItem.left, item.top, item.left)
+      }
+    });
+
+    const sorted = filtered
+    .sortBy('distance');
+
+  return sorted.head();
+  }
+
+
   calcNextItem({activeEntries, currentItem, direction}) {
     let nextItem;
 
@@ -96,101 +116,43 @@ class Keyboard {
         return false;
       }
       case 'left': {
-        let filteredOnlySameRow = activeEntries
-          .filter((item) => {
-            return currentItem.left > item.left 
-                && currentItem.top === item.top;
+        nextItem = this.calcNextEntryBy({
+          activeEntries,
+          currentItem,
+          filterFn: item => currentItem.left > item.left && currentItem.centerY === item.centerY,
+          filterFallbackFn: item => currentItem.left > item.left
         });
-
-        if (filteredOnlySameRow.length < 1) {
-          filteredOnlySameRow = activeEntries.filter(item => currentItem.left > item.left);
-        }
-        
-        const filtered = filteredOnlySameRow.map(item => {
-          return {
-            ...item,
-            distance: calcDistance(currentItem.top, currentItem.left, item.top, item.left)
-          }
-        });
-
-        const sorted = filtered
-        .sortBy('distance');
-
-        nextItem = sorted.head();
         break;
       }
 
       case 'right': {
-        let filteredOnlySameRow = activeEntries
-          .filter((item) => {
-            return currentItem.left < item.left 
-                && currentItem.top === item.top;
+        nextItem = this.calcNextEntryBy({
+          activeEntries,
+          currentItem,
+          filterFn: item => currentItem.left < item.left && currentItem.centerY === item.centerY,
+          filterFallbackFn: item => currentItem.left < item.left
         });
-
-        if (filteredOnlySameRow.length < 1) {
-          filteredOnlySameRow = activeEntries.filter(item => currentItem.left < item.left);
-        }
-        
-        const filtered = filteredOnlySameRow.map(item => {
-          return {
-            ...item,
-            distance: calcDistance(currentItem.left, currentItem.top, item.left, item.top)
-          }
-        });
-
-        const sorted = filtered
-        .sortBy('distance');
-        nextItem = sorted.head();
         break;
       }
 
       case 'down': {
-        let filteredOnlySameRow = activeEntries
-          .filter((item) => {
-            return currentItem.top < item.top 
-                && currentItem.top === item.top;
+        nextItem = this.calcNextEntryBy({
+          activeEntries,
+          currentItem,
+          filterFn: item => currentItem.top < item.top && currentItem.centerY === item.centerY,
+          filterFallbackFn: item => currentItem.top < item.top
         });
-
-        if (filteredOnlySameRow.length < 1) {
-          filteredOnlySameRow = activeEntries.filter(item => currentItem.top < item.top);
-        }
-        
-        const filtered = filteredOnlySameRow.map(item => {
-          return {
-            ...item,
-            distance: calcDistance(currentItem.left, currentItem.top, item.left, item.top)
-          }
-        });
-
-        const sorted = filtered
-        .sortBy('distance');
-
-        nextItem = sorted.head();
         break;
       }
       
       case 'up': {
-        let filteredOnlySameRow = activeEntries
-          .filter((item) => {
-            return currentItem.top > item.top 
-                && currentItem.left === item.left;
+        nextItem = this.calcNextEntryBy({
+          activeEntries,
+          currentItem,
+          filterFn: item => currentItem.top > item.top && currentItem.centerY === item.centerY,
+          filterFallbackFn: item => currentItem.top > item.top
         });
-
-        if (filteredOnlySameRow.length < 1) {
-          filteredOnlySameRow = activeEntries.filter(item => currentItem.top > item.top);
-        }
-        
-        const filtered = filteredOnlySameRow.map(item => {
-          return {
-            ...item,
-            distance: calcDistance(currentItem.left, currentItem.top, item.left, item.top)
-          }
-        });
-
-        const sorted = filtered
-          .sortBy('distance');
-
-        nextItem = sorted.head();
+        break;
 
         break;
       }

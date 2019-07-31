@@ -8,7 +8,7 @@ function bindIntersectionObservers() {
   const interSectionOptions = {
     root: null,
     rootMargin: '0px',
-    threshold: 0.1
+    threshold: 0
   }
 
   const interSectionCB = (entries) => {
@@ -19,7 +19,6 @@ function bindIntersectionObservers() {
       const { top, left, width, height } = entry.boundingClientRect;
       const centerX = left + width / 2;
       const centerY = top + height / 2;
-      const isVisible = $target.offsetParent;
 
       return {
         top,
@@ -29,18 +28,17 @@ function bindIntersectionObservers() {
         height,
         width,
         isIntersecting,
-        $target,
-        isVisible
+        $target
       };
     });
 
     const unionEntries = unionBy(mappedEntries, activeEntries, item => item.$target);
     activeEntries = unionEntries
-                      .filter(item => item.isIntersecting && item.isVisible);
+                      .filter(item => item.isIntersecting);
     
     passiveEntries = unionEntries
-                        .filter(item => item.isIntersecting === false && !item.isVisible);
-  };
+                        .filter(item => item.isIntersecting === false);
+ };
 
   
   const observer = new IntersectionObserver(interSectionCB, interSectionOptions);
