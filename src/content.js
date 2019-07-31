@@ -9,7 +9,7 @@ const keyboard = new Keyboard();
 
 function init() {
   const allItems = document.querySelectorAll('a');
-  let { observer, getFilteredEntries } = bindIntersectionObservers(keyboard.bindEntriesGetter);
+  let { observer, getFilteredEntries } = bindIntersectionObservers();
 
   keyboard.getFilteredEntries = getFilteredEntries;
 

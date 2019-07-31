@@ -1,8 +1,9 @@
 import unionBy from 'lodash/unionBy';
 
-function bindIntersectionObservers(bindEntriesGetter) {
+function bindIntersectionObservers() {
   const domItems = document.querySelectorAll('a');
-  let filteredEntries = [];
+  let activeEntries = [];
+  let passiveEntries = [];
 
   const interSectionOptions = {
     root: null,
@@ -11,12 +12,14 @@ function bindIntersectionObservers(bindEntriesGetter) {
   }
 
   const interSectionCB = (entries) => {
+
     const mappedEntries = entries.map(entry => {
       const $target = entry.target;
       const isIntersecting = entry.isIntersecting;
       const { top, left, width, height } = entry.boundingClientRect;
       const centerX = left + width / 2;
       const centerY = top + height / 2;
+      const isVisible = $target.offsetParent;
 
       return {
         top,
@@ -26,18 +29,17 @@ function bindIntersectionObservers(bindEntriesGetter) {
         height,
         width,
         isIntersecting,
-        $target
+        $target,
+        isVisible
       };
     });
 
-    filteredEntries = unionBy(mappedEntries, filteredEntries, item => item.$target)
-                      .filter(item => item.isIntersecting)
-                      .map((item, index) => {
-                        return {
-                          ...item,
-                          $index: index
-                        }
-                      });
+    const unionEntries = unionBy(mappedEntries, activeEntries, item => item.$target);
+    activeEntries = unionEntries
+                      .filter(item => item.isIntersecting && item.isVisible);
+    
+    passiveEntries = unionEntries
+                        .filter(item => item.isIntersecting === false && !item.isVisible);
   };
 
   
@@ -48,7 +50,10 @@ function bindIntersectionObservers(bindEntriesGetter) {
   });
 
   const getFilteredEntries = () => {
-    return filteredEntries;
+    return {
+      activeEntries,
+      passiveEntries
+    };
   }
 
   return { 

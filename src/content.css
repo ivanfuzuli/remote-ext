@@ -6,11 +6,8 @@
   left: 0;
 
   outline: 4px solid yellowgreen;
-  min-height: 20px;
-  min-width: 20px;
   transition: .3s;
   opacity: 0;
-
 }
 
 .can-layout {

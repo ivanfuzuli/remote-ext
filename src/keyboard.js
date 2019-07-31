@@ -1,5 +1,6 @@
 import debounce from 'lodash/debounce';
 import head from 'lodash/head';
+import find from 'lodash/find';
 
 import imgUp from './img/keyboard/up.svg';
 import imgDown from './img/keyboard/down.svg';
@@ -47,8 +48,8 @@ class Keyboard {
 
   setCurrentDefault() {
     if (!this.currentItem) {
-      const filteredEntries = this.getFilteredEntries();
-      this.currentItem = head(filteredEntries);
+      const { activeEntries } = this.getFilteredEntries();
+      this.currentItem = head(activeEntries);
       this.focus(this.currentItem);
 
       return true;
@@ -68,20 +69,41 @@ class Keyboard {
     $indicator.style.opacity = 1;
   }
 
-  calcNextItem({filteredEntries, currentItem, direction}) {
+  unFocus() {
+    const reset =  {
+      top: 0,
+      left: 0,
+      transform: 'inherit',
+      width: 0,
+      height: 0,
+      opacity: 0        
+    };
+
+    this.focus(reset);
+  }
+
+  calcNextItem({activeEntries, currentItem, direction}) {
     let nextItem;
 
+    if (!currentItem) {
+      currentItem = head(activeEntries);
+    }
 
     switch (direction) {
+      case 'enter': {
+        currentItem.$target.click();
+        this.unFocus();
+        return false;
+      }
       case 'left': {
-        let filteredOnlySameRow = filteredEntries
+        let filteredOnlySameRow = activeEntries
           .filter((item) => {
             return currentItem.centerX > item.centerX 
                 && currentItem.centerY === item.centerY;
         });
 
         if (filteredOnlySameRow.length < 1) {
-          filteredOnlySameRow = filteredEntries.filter(item => currentItem.centerX > item.centerX);
+          filteredOnlySameRow = activeEntries.filter(item => currentItem.centerX > item.centerX);
         }
         
         const filtered = filteredOnlySameRow.map(item => {
@@ -99,14 +121,14 @@ class Keyboard {
       }
 
       case 'right': {
-        let filteredOnlySameRow = filteredEntries
+        let filteredOnlySameRow = activeEntries
           .filter((item) => {
             return currentItem.centerX < item.centerX 
                 && currentItem.centerY === item.centerY;
         });
 
         if (filteredOnlySameRow.length < 1) {
-          filteredOnlySameRow = filteredEntries.filter(item => currentItem.centerX < item.centerX);
+          filteredOnlySameRow = activeEntries.filter(item => currentItem.centerX < item.centerX);
         }
         
         const filtered = filteredOnlySameRow.map(item => {
@@ -118,22 +140,19 @@ class Keyboard {
 
         const sorted = filtered
         .sortBy('distance');
-        console.log('current', currentItem);
-        console.log('----');
-        console.log('sorted', sorted);
         nextItem = sorted.head();
         break;
       }
 
       case 'down': {
-        let filteredOnlySameRow = filteredEntries
+        let filteredOnlySameRow = activeEntries
           .filter((item) => {
             return currentItem.centerY < item.centerY 
                 && currentItem.centerX === item.centerX;
         });
 
         if (filteredOnlySameRow.length < 1) {
-          filteredOnlySameRow = filteredEntries.filter(item => currentItem.centerY < item.centerY);
+          filteredOnlySameRow = activeEntries.filter(item => currentItem.centerY < item.centerY);
         }
         
         const filtered = filteredOnlySameRow.map(item => {
@@ -151,14 +170,14 @@ class Keyboard {
       }
       
       case 'up': {
-        let filteredOnlySameRow = filteredEntries
+        let filteredOnlySameRow = activeEntries
           .filter((item) => {
             return currentItem.centerY > item.centerY 
                 && currentItem.centerX === item.centerX;
         });
 
         if (filteredOnlySameRow.length < 1) {
-          filteredOnlySameRow = filteredEntries.filter(item => currentItem.centerY > item.centerY);
+          filteredOnlySameRow = activeEntries.filter(item => currentItem.centerY > item.centerY);
         }
         
         const filtered = filteredOnlySameRow.map(item => {
@@ -169,7 +188,7 @@ class Keyboard {
         });
 
         const sorted = filtered
-        .sortBy('distance');
+          .sortBy('distance');
 
         nextItem = sorted.head();
 
@@ -187,12 +206,17 @@ class Keyboard {
     };
     const currentItem = this.currentItem;
     const filteredEntries = this.getFilteredEntries();
+    const { activeEntries, passiveEntries } = filteredEntries;
 
-    const nextItem = this.calcNextItem({filteredEntries, direction, currentItem});
+    const nextItem = this.calcNextItem({activeEntries, direction, currentItem});
+    console.log('curr', currentItem);
+    console.log('next', nextItem);
     if (!nextItem) return;
 
     this.currentItem = nextItem;
-    focus(nextItem);
+    window.requestAnimationFrame(() => {
+      focus(nextItem);
+    });
   }
 
   bindPress () {
