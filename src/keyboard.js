@@ -49,7 +49,12 @@ class Keyboard {
     if (!this.currentItem) {
       const filteredEntries = this.getFilteredEntries();
       this.currentItem = head(filteredEntries);
+      this.focus(this.currentItem);
+
+      return true;
     }
+
+    return false;
   }
 
   focus(nextItem) {
@@ -60,6 +65,7 @@ class Keyboard {
     $indicator.style.transform = transform; 
     $indicator.style.width = width + 'px';
     $indicator.style.height = height + 'px'; 
+    $indicator.style.opacity = 1;
   }
 
   calcNextItem({filteredEntries, currentItem, direction}) {
@@ -113,6 +119,7 @@ class Keyboard {
         const sorted = filtered
         .sortBy('distance');
         console.log('current', currentItem);
+        console.log('----');
         console.log('sorted', sorted);
         nextItem = sorted.head();
         break;
@@ -174,16 +181,18 @@ class Keyboard {
   }
 
   navigate(direction) {
-    const $focus = this.focus.bind(this);
-    this.setCurrentDefault();
+    const focus = this.focus.bind(this);
+    if (this.setCurrentDefault()) {
+      return;
+    };
     const currentItem = this.currentItem;
     const filteredEntries = this.getFilteredEntries();
 
     const nextItem = this.calcNextItem({filteredEntries, direction, currentItem});
-    if (!nextItem) return false;
+    if (!nextItem) return;
 
     this.currentItem = nextItem;
-    $focus(nextItem);
+    focus(nextItem);
   }
 
   bindPress () {
