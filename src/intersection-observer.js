@@ -1,7 +1,7 @@
 import unionBy from 'lodash/unionBy';
 
 function bindIntersectionObservers() {
-  const domItems = document.querySelectorAll('a');
+  const domItems = document.querySelectorAll('a, button, input');
   let activeEntries = [];
   let passiveEntries = [];
 

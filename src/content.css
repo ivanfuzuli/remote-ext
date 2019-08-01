@@ -12,23 +12,43 @@
 
 .can-layout {
   position: fixed;
+  width: 132px;
+  z-index: 999999;
+  
   bottom: 5px;
   right: 5px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 132px;
-  z-index: 999999;
 }
 
 .can-layout__icon {
   float: left;
   margin: 2px;
   opacity: .5;
-
+  width: 36px;
+  height: 36px;
   transition: 0.5s;
 }
 
 .can-layout__active {
   opacity: 1;
+}
+
+.can-point {
+  position: absolute;
+  height: 8px;
+  width: 8px;
+  opacity: 0.8;
+  border: 1px solid red;
+  background: red;
+  border-radius: 50%;
+  z-index: 99999;
+}
+
+.can-point__green {
+  width: 4px;
+  height: 4px;
+  background-color: green;
+  border-color: green;
 }

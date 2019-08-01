@@ -1,21 +1,48 @@
 import debounce from 'lodash/debounce';
 import head from 'lodash/head';
-import find from 'lodash/find';
 
-import imgUp from './img/keyboard/up.svg';
-import imgDown from './img/keyboard/down.svg';
-import imgLeft from './img/keyboard/left.svg';
-import imgRight from './img/keyboard/right.svg';
-import imgEnter from './img/keyboard/enter.svg';
-import extendArray from './extend-array.js';
+import createLayout from './layout.js';
+import debugPoint from './debug-point.js';
 
-extendArray();
+import { initExtendArray, calcDistanceBy } from './helpers.js';
 
-function calcDistance(x1, y1, x2, y2) {
-  var a = x1 - x2;
-  var b = y1 - y2;
+initExtendArray();
 
-  return Math.sqrt( a*a + b*b );
+const KEYMAPPING = {
+  '37': 'left',
+  '38': 'up',
+  '39': 'right',
+  '40': 'down',
+  '13': 'enter',
+};
+
+const DEBOUNCED = {
+  left: false,
+  right: false,
+  up: false,
+  down: false,
+  enter: false
+};
+
+
+const calcNextEntryBy = ({activeEntries, currentItem, filterFn, filterFallbackFn}) => {
+  let filteredOnlySameRow = activeEntries.filter(filterFn);
+
+  // extend range of items by fallback function
+  if (filteredOnlySameRow.length < 1) {
+    filteredOnlySameRow = activeEntries.filter(filterFallbackFn);
+  }
+
+  const filtered = filteredOnlySameRow.map(item => {
+    return {
+      ...item,
+      distance: calcDistanceBy(currentItem.top, currentItem.left, item.top, item.left)
+    }
+  });
+  const sorted = filtered.sortBy('distance');
+
+  debugPoint(sorted);
+return sorted.head();
 }
 
 class Keyboard {
@@ -24,25 +51,10 @@ class Keyboard {
     this.getFilteredEntries = null;
     
     this.$container = null;
-    this.$indicator = null;
 
-    this.KEYMAPPING = {
-      '37': 'left',
-      '38': 'up',
-      '39': 'right',
-      '40': 'down',
-      '13': 'enter',
-    };
-
-    this.debounced = {
-      left: false,
-      right: false,
-      up: false,
-      down: false,
-      enter: false
-    };
-
-    this.bindedElements = this.createLayout();
+    const layout = createLayout();
+    this.$indicator = layout.$indicator;
+    this.bindedElements = layout.arrows;
     this.bindPress();
   }
 
@@ -82,29 +94,8 @@ class Keyboard {
     this.focus(reset);
   }
 
-  calcNextEntryBy({activeEntries, currentItem, filterFn, filterFallbackFn}) {
-    let filteredOnlySameRow = activeEntries.filter(filterFn);
-    if (filteredOnlySameRow.length < 1) {
-      filteredOnlySameRow = activeEntries.filter(filterFallbackFn);
-    }
-  
-    const filtered = filteredOnlySameRow.map(item => {
-      return {
-        ...item,
-        distance: calcDistance(currentItem.top, currentItem.left, item.top, item.left)
-      }
-    });
-
-    const sorted = filtered
-    .sortBy('distance');
-
-  return sorted.head();
-  }
-
 
   calcNextItem({activeEntries, currentItem, direction}) {
-    let nextItem;
-
     if (!currentItem) {
       currentItem = head(activeEntries);
     }
@@ -116,49 +107,41 @@ class Keyboard {
         return false;
       }
       case 'left': {
-        nextItem = this.calcNextEntryBy({
+        return calcNextEntryBy({
           activeEntries,
           currentItem,
           filterFn: item => currentItem.left > item.left && currentItem.centerY === item.centerY,
-          filterFallbackFn: item => currentItem.left > item.left
+          filterFallbackFn: item => currentItem.centerX > item.centerX
         });
-        break;
       }
 
       case 'right': {
-        nextItem = this.calcNextEntryBy({
+        return calcNextEntryBy({
           activeEntries,
           currentItem,
           filterFn: item => currentItem.left < item.left && currentItem.centerY === item.centerY,
-          filterFallbackFn: item => currentItem.left < item.left
+          filterFallbackFn: item => currentItem.centerX < item.centerX
         });
-        break;
       }
 
       case 'down': {
-        nextItem = this.calcNextEntryBy({
+        return calcNextEntryBy({
           activeEntries,
           currentItem,
           filterFn: item => currentItem.top < item.top && currentItem.centerY === item.centerY,
-          filterFallbackFn: item => currentItem.top < item.top
+          filterFallbackFn: item => currentItem.centerY < item.centerY
         });
-        break;
       }
       
       case 'up': {
-        nextItem = this.calcNextEntryBy({
+        return calcNextEntryBy({
           activeEntries,
           currentItem,
           filterFn: item => currentItem.top > item.top && currentItem.centerY === item.centerY,
-          filterFallbackFn: item => currentItem.top > item.top
+          filterFallbackFn: item => currentItem.centerY > item.centerY
         });
-        break;
-
-        break;
       }
     }
-
-    return nextItem;
   }
 
   navigate(direction) {
@@ -184,8 +167,8 @@ class Keyboard {
     window.addEventListener('keydown', (evt) => {
       const keyCode = evt.keyCode;
 
-      if (keyCode in this.KEYMAPPING) {
-        const direction = this.KEYMAPPING[keyCode];
+      if (keyCode in KEYMAPPING) {
+        const direction = KEYMAPPING[keyCode];
         this.navigate(direction);
 
         this.animateArrow(direction);
@@ -196,14 +179,14 @@ class Keyboard {
     window.addEventListener('keyup', (evt) => {
       const keyCode = evt.keyCode;
 
-      if (keyCode in this.KEYMAPPING) {
-        const direction = this.KEYMAPPING[keyCode];
+      if (keyCode in KEYMAPPING) {
+        const direction = KEYMAPPING[keyCode];
         const cb = this.unAnimateArrow.bind(this, direction);
 
-        if (!this.debounced[direction]){
-          this.debounced[direction] = debounce(cb, 500, false);
+        if (!DEBOUNCED[direction]){
+          DEBOUNCED[direction] = debounce(cb, 500, false);
         }
-        this.debounced[direction].call(this);
+        DEBOUNCED[direction].call(this);
 
 
         evt.preventDefault();
@@ -218,61 +201,6 @@ class Keyboard {
   animateArrow(direction) {
     const elm = this.bindedElements[direction];
     elm.classList.add('can-layout__active');
-  }
-
-  createLayout() {
-    const $indicator = document.createElement('div');
-  
-    const container = document.createElement('div');
-    const middle = document.createElement('div');
-
-    const left = document.createElement('div');
-    const right = document.createElement('div');
-    const up = document.createElement('div');
-    const down = document.createElement('div');
-    const enter = document.createElement('div');
-
-    container.classList.add('can-layout');
-    
-    up.innerHTML = imgUp;
-    down.innerHTML = imgDown;
-    left.innerHTML = imgLeft;
-    right.innerHTML = imgRight;
-    enter.innerHTML = imgEnter;
-  
-    left.classList.add('can-layout__icon');
-    right.classList.add('can-layout__icon');
-    up.classList.add('can-layout__icon');
-    down.classList.add('can-layout__icon');
-    enter.classList.add('can-layout__icon');
-  
-    middle.classList.add('can-layout__middle');
-
-    $indicator.classList.add('can-selected');
-
-    middle.appendChild(left);
-    middle.appendChild(enter);
-    middle.appendChild(right);
-
-    container.appendChild(up);
-    container.appendChild(middle);
-    container.appendChild(down);
-    
-    document.body.appendChild($indicator);
-
-    this.$indicator = $indicator;
-
-    window.addEventListener('load', () => {
-      document.body.appendChild(container);
-    });
-
-    return {
-      up,
-      down,
-      left,
-      right,
-      enter
-    }
   }
 }
 
