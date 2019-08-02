@@ -1,4 +1,4 @@
-const debugPoint = (items) => {
+const debugPoints = (items, isFallback) => {
   const allNodes = document.querySelectorAll('.can-point');
   allNodes.forEach((node) => {
     return node.remove();
@@ -17,6 +17,7 @@ const debugPoint = (items) => {
     const greenTransform = `translate(${left}px, ${top}px)`;
 
     $node.classList.add('can-point');
+
     $greenNode.classList.add('can-point');
     $greenNode.classList.add('can-point__green');
 
@@ -28,4 +29,4 @@ const debugPoint = (items) => {
   });
 }
 
-export default debugPoint;
+export default debugPoints;

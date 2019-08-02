@@ -10,7 +10,7 @@ const domObserver = function(whenUpdated) {
 
   const observer = new MutationObserver(mutationCB);
 
-  const options = { attributes: true, childList: false, subtree: true };
+  const options = { childList: true, subtree: true };
   // Start observing the target node for optionsured mutations
   observer.observe(document.body, options);
 }

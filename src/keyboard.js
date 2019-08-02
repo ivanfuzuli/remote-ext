@@ -2,7 +2,7 @@ import debounce from 'lodash/debounce';
 import head from 'lodash/head';
 
 import createLayout from './layout.js';
-import debugPoint from './debug-point.js';
+import debugPoints from './debug-points.js';
 
 import { initExtendArray, calcDistanceBy } from './helpers.js';
 
@@ -25,24 +25,22 @@ const DEBOUNCED = {
 };
 
 
-const calcNextEntryBy = ({activeEntries, currentItem, filterFn, filterFallbackFn}) => {
+const calcNextEntryBy = ({activeEntries, currentItem, filterFn, priorityFn}) => {
   let filteredOnlySameRow = activeEntries.filter(filterFn);
-
-  // extend range of items by fallback function
-  if (filteredOnlySameRow.length < 1) {
-    filteredOnlySameRow = activeEntries.filter(filterFallbackFn);
-  }
 
   const filtered = filteredOnlySameRow.map(item => {
     return {
       ...item,
-      distance: calcDistanceBy(currentItem.top, currentItem.left, item.top, item.left)
+      distance: calcDistanceBy(currentItem.centerX, currentItem.centerY, item.centerX, item.centerY)
     }
   });
-  const sorted = filtered.sortBy('distance');
 
-  debugPoint(sorted);
-return sorted.head();
+  const mapped = filtered.map(priorityFn);
+  const sorted = mapped.sortBy(['priority', 'distance']);
+  const active = sorted.head();
+
+  debugPoints(sorted);
+  return active;
 }
 
 class Keyboard {
@@ -102,16 +100,44 @@ class Keyboard {
 
     switch (direction) {
       case 'enter': {
-        currentItem.$target.click();
-        this.unFocus();
+        const $target = currentItem.$target;
+        const tagName = $target.tagName;
+
+        if (tagName.toLowerCase() === 'input') {
+          $target.focus();
+        } else {
+          $target.click()
+          this.unFocus();
+        } 
+
         return false;
       }
       case 'left': {
         return calcNextEntryBy({
           activeEntries,
           currentItem,
-          filterFn: item => currentItem.left > item.left && currentItem.centerY === item.centerY,
-          filterFallbackFn: item => currentItem.centerX > item.centerX
+          filterFn: item => {
+            return currentItem.centerX > item.centerX;
+          },
+          priorityFn: (item) => {
+            const min = currentItem.top;
+            const max = currentItem.top + currentItem.height;
+            
+            let priority = 0;
+
+            if (max > item.centerY && min < item.centerY) {
+              priority = -1;
+            }
+
+            if (currentItem.centerY === item.centerY) {
+              priority = -1;
+            }
+
+            return {
+                ...item,
+                priority
+              }
+          }
         });
       }
 
@@ -119,8 +145,29 @@ class Keyboard {
         return calcNextEntryBy({
           activeEntries,
           currentItem,
-          filterFn: item => currentItem.left < item.left && currentItem.centerY === item.centerY,
-          filterFallbackFn: item => currentItem.centerX < item.centerX
+          filterFn: item => {
+            return currentItem.centerX < item.centerX;
+          },
+
+          priorityFn: (item) => {
+            const min = currentItem.top;
+            const max = currentItem.top + currentItem.height;
+            
+            let priority = 0;
+
+            if (max > item.centerY && min < item.centerY) {
+              priority = -1;
+            }
+
+            if (currentItem.centerY === item.centerY) {
+              priority = -1;
+            }
+
+            return {
+                ...item,
+                priority
+              }
+          }
         });
       }
 
@@ -128,8 +175,27 @@ class Keyboard {
         return calcNextEntryBy({
           activeEntries,
           currentItem,
-          filterFn: item => currentItem.top < item.top && currentItem.centerY === item.centerY,
-          filterFallbackFn: item => currentItem.centerY < item.centerY
+          filterFn: item => {
+            return currentItem.centerY < item.centerY
+          },
+          priorityFn: (item) => {
+            const min = currentItem.left;
+            const max = currentItem.left + currentItem.width;
+            
+            let priority = 0;
+            if (currentItem.centerX === item.centerX) {
+              priority = -1;
+            }
+
+            if (max > item.centerX && min < item.centerX) {
+              priority = -1;
+            }
+
+            return {
+                ...item,
+                priority
+              }
+          }
         });
       }
       
@@ -137,8 +203,27 @@ class Keyboard {
         return calcNextEntryBy({
           activeEntries,
           currentItem,
-          filterFn: item => currentItem.top > item.top && currentItem.centerY === item.centerY,
-          filterFallbackFn: item => currentItem.centerY > item.centerY
+          filterFn: item => {
+            return currentItem.centerY > item.centerY;
+          },
+          priorityFn: (item) => {
+            const min = currentItem.left;
+            const max = currentItem.left + currentItem.width;
+            
+            let priority = 0;
+            if (currentItem.centerX === item.centerX) {
+              priority = -1;
+            }
+            
+            if (max > item.centerX && min < item.centerX) {
+              priority = -1;
+            }
+
+            return {
+                ...item,
+                priority
+              }
+          }
         });
       }
     }
@@ -151,7 +236,7 @@ class Keyboard {
     };
     const currentItem = this.currentItem;
     const filteredEntries = this.getFilteredEntries();
-    const { activeEntries, passiveEntries } = filteredEntries;
+    const { activeEntries } = filteredEntries;
 
     const nextItem = this.calcNextItem({activeEntries, direction, currentItem});
 
