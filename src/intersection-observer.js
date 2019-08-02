@@ -1,16 +1,18 @@
 import unionBy from 'lodash/unionBy';
 
-function bindIntersectionObservers(bindEntriesGetter) {
-  const domItems = document.querySelectorAll('a');
-  let filteredEntries = [];
+function bindIntersectionObservers() {
+  const domItems = document.querySelectorAll('a, button, input');
+  let activeEntries = [];
+  let passiveEntries = [];
 
   const interSectionOptions = {
     root: null,
     rootMargin: '0px',
-    threshold: 1
+    threshold: 0
   }
 
   const interSectionCB = (entries) => {
+
     const mappedEntries = entries.map(entry => {
       const $target = entry.target;
       const isIntersecting = entry.isIntersecting;
@@ -30,15 +32,13 @@ function bindIntersectionObservers(bindEntriesGetter) {
       };
     });
 
-    filteredEntries = unionBy(mappedEntries, filteredEntries, item => item.$target)
-                      .filter(item => item.isIntersecting)
-                      .map((item, index) => {
-                        return {
-                          ...item,
-                          $index: index
-                        }
-                      });
-  };
+    const unionEntries = unionBy(mappedEntries, activeEntries, item => item.$target);
+    activeEntries = unionEntries
+                      .filter(item => item.isIntersecting);
+    
+    passiveEntries = unionEntries
+                        .filter(item => item.isIntersecting === false);
+ };
 
   
   const observer = new IntersectionObserver(interSectionCB, interSectionOptions);
@@ -48,7 +48,10 @@ function bindIntersectionObservers(bindEntriesGetter) {
   });
 
   const getFilteredEntries = () => {
-    return filteredEntries;
+    return {
+      activeEntries,
+      passiveEntries
+    };
   }
 
   return { 

@@ -1,20 +1,46 @@
 import debounce from 'lodash/debounce';
 import head from 'lodash/head';
 
-import imgUp from './img/keyboard/up.svg';
-import imgDown from './img/keyboard/down.svg';
-import imgLeft from './img/keyboard/left.svg';
-import imgRight from './img/keyboard/right.svg';
-import imgEnter from './img/keyboard/enter.svg';
-import extendArray from './extend-array.js';
+import createLayout from './layout.js';
+import debugPoints from './debug-points.js';
 
-extendArray();
+import { initExtendArray, calcDistanceBy } from './helpers.js';
 
-function calcDistance(x1, y1, x2, y2) {
-  var a = x1 - x2;
-  var b = y1 - y2;
+initExtendArray();
 
-  return Math.sqrt( a*a + b*b );
+const KEYMAPPING = {
+  '37': 'left',
+  '38': 'up',
+  '39': 'right',
+  '40': 'down',
+  '13': 'enter',
+};
+
+const DEBOUNCED = {
+  left: false,
+  right: false,
+  up: false,
+  down: false,
+  enter: false
+};
+
+
+const calcNextEntryBy = ({activeEntries, currentItem, filterFn, priorityFn}) => {
+  let filteredOnlySameRow = activeEntries.filter(filterFn);
+
+  const filtered = filteredOnlySameRow.map(item => {
+    return {
+      ...item,
+      distance: calcDistanceBy(currentItem.centerX, currentItem.centerY, item.centerX, item.centerY)
+    }
+  });
+
+  const mapped = filtered.map(priorityFn);
+  const sorted = mapped.sortBy(['priority', 'distance']);
+  const active = sorted.head();
+
+  debugPoints(sorted);
+  return active;
 }
 
 class Keyboard {
@@ -23,33 +49,23 @@ class Keyboard {
     this.getFilteredEntries = null;
     
     this.$container = null;
-    this.$indicator = null;
 
-    this.KEYMAPPING = {
-      '37': 'left',
-      '38': 'up',
-      '39': 'right',
-      '40': 'down',
-      '13': 'enter',
-    };
-
-    this.debounced = {
-      left: false,
-      right: false,
-      up: false,
-      down: false,
-      enter: false
-    };
-
-    this.bindedElements = this.createLayout();
+    const layout = createLayout();
+    this.$indicator = layout.$indicator;
+    this.bindedElements = layout.arrows;
     this.bindPress();
   }
 
   setCurrentDefault() {
     if (!this.currentItem) {
-      const filteredEntries = this.getFilteredEntries();
-      this.currentItem = head(filteredEntries);
+      const { activeEntries } = this.getFilteredEntries();
+      this.currentItem = head(activeEntries);
+      this.focus(this.currentItem);
+
+      return true;
     }
+
+    return false;
   }
 
   focus(nextItem) {
@@ -60,138 +76,184 @@ class Keyboard {
     $indicator.style.transform = transform; 
     $indicator.style.width = width + 'px';
     $indicator.style.height = height + 'px'; 
+    $indicator.style.opacity = 1;
   }
 
-  calcNextItem({filteredEntries, currentItem, direction}) {
-    let nextItem;
+  unFocus() {
+    const reset =  {
+      top: 0,
+      left: 0,
+      transform: 'inherit',
+      width: 0,
+      height: 0,
+      opacity: 0        
+    };
 
+    this.focus(reset);
+  }
+
+
+  calcNextItem({activeEntries, currentItem, direction}) {
+    if (!currentItem) {
+      currentItem = head(activeEntries);
+    }
 
     switch (direction) {
-      case 'left': {
-        let filteredOnlySameRow = filteredEntries
-          .filter((item) => {
-            return currentItem.centerX > item.centerX 
-                && currentItem.centerY === item.centerY;
-        });
+      case 'enter': {
+        const $target = currentItem.$target;
+        const tagName = $target.tagName;
 
-        if (filteredOnlySameRow.length < 1) {
-          filteredOnlySameRow = filteredEntries.filter(item => currentItem.centerX > item.centerX);
-        }
-        
-        const filtered = filteredOnlySameRow.map(item => {
-          return {
-            ...item,
-            distance: calcDistance(currentItem.centerX, currentItem.centerY, item.centerX, item.centerY)
+        if (tagName.toLowerCase() === 'input') {
+          $target.focus();
+        } else {
+          $target.click()
+          this.unFocus();
+        } 
+
+        return false;
+      }
+      case 'left': {
+        return calcNextEntryBy({
+          activeEntries,
+          currentItem,
+          filterFn: item => {
+            return currentItem.centerX > item.centerX;
+          },
+          priorityFn: (item) => {
+            const min = currentItem.top;
+            const max = currentItem.top + currentItem.height;
+            
+            let priority = 0;
+
+            if (max > item.centerY && min < item.centerY) {
+              priority = -1;
+            }
+
+            if (currentItem.centerY === item.centerY) {
+              priority = -1;
+            }
+
+            return {
+                ...item,
+                priority
+              }
           }
         });
-
-        const sorted = filtered
-        .sortBy('distance');
-
-        nextItem = sorted.head();
-        break;
       }
 
       case 'right': {
-        let filteredOnlySameRow = filteredEntries
-          .filter((item) => {
-            return currentItem.centerX < item.centerX 
-                && currentItem.centerY === item.centerY;
-        });
+        return calcNextEntryBy({
+          activeEntries,
+          currentItem,
+          filterFn: item => {
+            return currentItem.centerX < item.centerX;
+          },
 
-        if (filteredOnlySameRow.length < 1) {
-          filteredOnlySameRow = filteredEntries.filter(item => currentItem.centerX < item.centerX);
-        }
-        
-        const filtered = filteredOnlySameRow.map(item => {
-          return {
-            ...item,
-            distance: calcDistance(currentItem.centerX, currentItem.centerY, item.centerX, item.centerY)
+          priorityFn: (item) => {
+            const min = currentItem.top;
+            const max = currentItem.top + currentItem.height;
+            
+            let priority = 0;
+
+            if (max > item.centerY && min < item.centerY) {
+              priority = -1;
+            }
+
+            if (currentItem.centerY === item.centerY) {
+              priority = -1;
+            }
+
+            return {
+                ...item,
+                priority
+              }
           }
         });
-
-        const sorted = filtered
-        .sortBy('distance');
-        console.log('current', currentItem);
-        console.log('sorted', sorted);
-        nextItem = sorted.head();
-        break;
       }
 
       case 'down': {
-        let filteredOnlySameRow = filteredEntries
-          .filter((item) => {
-            return currentItem.centerY < item.centerY 
-                && currentItem.centerX === item.centerX;
-        });
+        return calcNextEntryBy({
+          activeEntries,
+          currentItem,
+          filterFn: item => {
+            return currentItem.centerY < item.centerY
+          },
+          priorityFn: (item) => {
+            const min = currentItem.left;
+            const max = currentItem.left + currentItem.width;
+            
+            let priority = 0;
+            if (currentItem.centerX === item.centerX) {
+              priority = -1;
+            }
 
-        if (filteredOnlySameRow.length < 1) {
-          filteredOnlySameRow = filteredEntries.filter(item => currentItem.centerY < item.centerY);
-        }
-        
-        const filtered = filteredOnlySameRow.map(item => {
-          return {
-            ...item,
-            distance: calcDistance(currentItem.centerX, currentItem.centerY, item.centerX, item.centerY)
+            if (max > item.centerX && min < item.centerX) {
+              priority = -1;
+            }
+
+            return {
+                ...item,
+                priority
+              }
           }
         });
-
-        const sorted = filtered
-        .sortBy('distance');
-
-        nextItem = sorted.head();
-        break;
       }
       
       case 'up': {
-        let filteredOnlySameRow = filteredEntries
-          .filter((item) => {
-            return currentItem.centerY > item.centerY 
-                && currentItem.centerX === item.centerX;
-        });
+        return calcNextEntryBy({
+          activeEntries,
+          currentItem,
+          filterFn: item => {
+            return currentItem.centerY > item.centerY;
+          },
+          priorityFn: (item) => {
+            const min = currentItem.left;
+            const max = currentItem.left + currentItem.width;
+            
+            let priority = 0;
+            if (currentItem.centerX === item.centerX) {
+              priority = -1;
+            }
+            
+            if (max > item.centerX && min < item.centerX) {
+              priority = -1;
+            }
 
-        if (filteredOnlySameRow.length < 1) {
-          filteredOnlySameRow = filteredEntries.filter(item => currentItem.centerY > item.centerY);
-        }
-        
-        const filtered = filteredOnlySameRow.map(item => {
-          return {
-            ...item,
-            distance: calcDistance(currentItem.centerX, currentItem.centerY, item.centerX, item.centerY)
+            return {
+                ...item,
+                priority
+              }
           }
         });
-
-        const sorted = filtered
-        .sortBy('distance');
-
-        nextItem = sorted.head();
-
-        break;
       }
     }
-
-    return nextItem;
   }
 
   navigate(direction) {
-    const $focus = this.focus.bind(this);
-    this.setCurrentDefault();
+    const focus = this.focus.bind(this);
+    if (this.setCurrentDefault()) {
+      return;
+    };
     const currentItem = this.currentItem;
     const filteredEntries = this.getFilteredEntries();
+    const { activeEntries } = filteredEntries;
 
-    const nextItem = this.calcNextItem({filteredEntries, direction, currentItem});
-    if (!nextItem) return false;
+    const nextItem = this.calcNextItem({activeEntries, direction, currentItem});
+
+    if (!nextItem) return;
 
     this.currentItem = nextItem;
-    $focus(nextItem);
+    window.requestAnimationFrame(() => {
+      focus(nextItem);
+    });
   }
 
   bindPress () {
     window.addEventListener('keydown', (evt) => {
       const keyCode = evt.keyCode;
 
-      if (keyCode in this.KEYMAPPING) {
-        const direction = this.KEYMAPPING[keyCode];
+      if (keyCode in KEYMAPPING) {
+        const direction = KEYMAPPING[keyCode];
         this.navigate(direction);
 
         this.animateArrow(direction);
@@ -202,14 +264,14 @@ class Keyboard {
     window.addEventListener('keyup', (evt) => {
       const keyCode = evt.keyCode;
 
-      if (keyCode in this.KEYMAPPING) {
-        const direction = this.KEYMAPPING[keyCode];
+      if (keyCode in KEYMAPPING) {
+        const direction = KEYMAPPING[keyCode];
         const cb = this.unAnimateArrow.bind(this, direction);
 
-        if (!this.debounced[direction]){
-          this.debounced[direction] = debounce(cb, 500, false);
+        if (!DEBOUNCED[direction]){
+          DEBOUNCED[direction] = debounce(cb, 500, false);
         }
-        this.debounced[direction].call(this);
+        DEBOUNCED[direction].call(this);
 
 
         evt.preventDefault();
@@ -224,61 +286,6 @@ class Keyboard {
   animateArrow(direction) {
     const elm = this.bindedElements[direction];
     elm.classList.add('can-layout__active');
-  }
-
-  createLayout() {
-    const $indicator = document.createElement('div');
-  
-    const container = document.createElement('div');
-    const middle = document.createElement('div');
-
-    const left = document.createElement('div');
-    const right = document.createElement('div');
-    const up = document.createElement('div');
-    const down = document.createElement('div');
-    const enter = document.createElement('div');
-
-    container.classList.add('can-layout');
-    
-    up.innerHTML = imgUp;
-    down.innerHTML = imgDown;
-    left.innerHTML = imgLeft;
-    right.innerHTML = imgRight;
-    enter.innerHTML = imgEnter;
-  
-    left.classList.add('can-layout__icon');
-    right.classList.add('can-layout__icon');
-    up.classList.add('can-layout__icon');
-    down.classList.add('can-layout__icon');
-    enter.classList.add('can-layout__icon');
-  
-    middle.classList.add('can-layout__middle');
-
-    $indicator.classList.add('can-selected');
-
-    middle.appendChild(left);
-    middle.appendChild(enter);
-    middle.appendChild(right);
-
-    container.appendChild(up);
-    container.appendChild(middle);
-    container.appendChild(down);
-    
-    document.body.appendChild($indicator);
-
-    this.$indicator = $indicator;
-
-    window.addEventListener('load', () => {
-      document.body.appendChild(container);
-    });
-
-    return {
-      up,
-      down,
-      left,
-      right,
-      enter
-    }
   }
 }
 
