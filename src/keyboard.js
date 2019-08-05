@@ -55,6 +55,7 @@ class Keyboard {
     this.$container = null;
 
     const layout = createLayout();
+    console.log('layout', layout);
     this.$indicator = layout.$indicator;
     this.bindedElements = layout.arrows;
     this.bindPress();

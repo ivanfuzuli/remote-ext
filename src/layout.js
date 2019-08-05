@@ -43,6 +43,7 @@ const createLayout = () => {
   container.appendChild(down);
   
   document.body.appendChild($indicator);
+  document.body.appendChild(container);
 
   window.addEventListener('load', () => {
     document.body.appendChild(container);
