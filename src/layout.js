@@ -60,4 +60,19 @@ const createLayout = () => {
   }
 }
 
+const createLoading = () => {
+  const $loading = document.createElement('div');
+  const $loadingText = document.createTextNode('Remote Extension: loading...');
+  $loading.classList.add('can-loading');
+  
+  $loading.appendChild($loadingText);
+  document.body.appendChild($loading);
+
+  return $loading;
+}
+
 export default createLayout;
+export {
+  createLoading,
+  createLayout
+};

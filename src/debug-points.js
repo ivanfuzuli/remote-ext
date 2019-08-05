@@ -1,4 +1,4 @@
-const debugPoints = (items, isFallback) => {
+const debugPoints = (items, scrollY) => {
   const allNodes = document.querySelectorAll('.can-point');
   allNodes.forEach((node) => {
     return node.remove();
@@ -13,8 +13,8 @@ const debugPoints = (items, isFallback) => {
     const y = left + (width / 2) - itemWidth;
     const x = top + (height / 2) - itemWidth;
 
-    const transform = `translate(${y}px, ${x}px)`; 
-    const greenTransform = `translate(${left}px, ${top}px)`;
+    const transform = `translate(${y}px, ${scrollY + x}px)`; 
+    const greenTransform = `translate(${left}px, ${scrollY +  top}px)`;
 
     $node.classList.add('can-point');
 
