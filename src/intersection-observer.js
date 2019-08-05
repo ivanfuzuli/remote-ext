@@ -12,10 +12,10 @@ function bindIntersectionObservers() {
   }
 
   const interSectionCB = (entries) => {
-
     const mappedEntries = entries.map(entry => {
-      const $target = entry.target;
+      const target = entry.target;
       const isIntersecting = entry.isIntersecting;
+      const intersectionRatio = entry.intersectionRatio;
       const { top, left, width, height } = entry.boundingClientRect;
       const centerX = left + width / 2;
       const centerY = top + height / 2;
@@ -28,11 +28,12 @@ function bindIntersectionObservers() {
         height,
         width,
         isIntersecting,
-        $target
+        target,
+        intersectionRatio
       };
     });
 
-    const unionEntries = unionBy(mappedEntries, activeEntries, item => item.$target);
+    const unionEntries = unionBy(mappedEntries, activeEntries, item => item.target);
     activeEntries = unionEntries
                       .filter(item => item.isIntersecting);
     
@@ -47,14 +48,34 @@ function bindIntersectionObservers() {
     observer.observe(link);
   });
 
+  const recalculateEntryCoordinate = entry => {
+    const { top, left, width, height } = entry.target.getBoundingClientRect();
+    
+    const centerX = left + width / 2;
+    const centerY = top + height / 2;
+
+    return {
+      ...entry,
+      centerX,
+      centerY,
+      top,
+      left
+    }
+  };
+
+  const recalculateEntriesCoordinates = () => {
+    activeEntries = activeEntries.map(recalculateEntryCoordinate);
+  };
   const getFilteredEntries = () => {
     return {
       activeEntries,
-      passiveEntries
+      passiveEntries,
     };
   }
 
-  return { 
+  return {
+    recalculateEntriesCoordinates,
+    recalculateEntryCoordinate,
     getFilteredEntries,
     observer
   }

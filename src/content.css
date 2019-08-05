@@ -1,3 +1,21 @@
+.can-loading {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  margin-left: -60px;
+  width: 150px;
+  padding: 5px;
+  background:rgba(154, 205, 50, .6);
+
+  z-index: 9999;
+
+  text-align: center;
+
+  font: Helvetica, Arial, serif;
+  font-size: 11pt;
+  border-radius: 5px;
+}
+
 .can-selected {
   position: absolute;
   z-index: 99999;
@@ -7,7 +25,6 @@
 
   outline: 4px solid yellowgreen;
   transition: .3s;
-  opacity: 0;
 }
 
 .can-layout {
@@ -55,4 +72,10 @@
   height: 4px;
   background-color: green;
   border-color: green;
+}
+
+.can-line {
+  position: fixed;
+  width: 100%;
+  border-bottom: 1px solid red;
 }

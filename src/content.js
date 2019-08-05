@@ -3,15 +3,23 @@ import Keyboard from './keyboard.js';
 import bindIntersectionObservers from './intersection-observer.js';
 import domObserver from './dom-observer.js';
 
+import { createLoading } from './layout.js';
 import './content.css';
 
-const keyboard = new Keyboard();
+const $loading = createLoading();
 
 function init() {
+  const keyboard = new Keyboard();
+
   const allItems = document.querySelectorAll('a');
-  let { observer, getFilteredEntries } = bindIntersectionObservers();
+  let { observer, 
+        getFilteredEntries, 
+        recalculateEntriesCoordinates, 
+        recalculateEntryCoordinate } = bindIntersectionObservers();
 
   keyboard.getFilteredEntries = getFilteredEntries;
+  keyboard.recalculateEntriesCoordinates = recalculateEntriesCoordinates;
+  keyboard.recalculateEntryCoordinate = recalculateEntryCoordinate;
 
   function updateObservers() {
     const newAllItems = document.querySelectorAll('a');
@@ -26,6 +34,10 @@ function init() {
 
 
 window.addEventListener('load', () => {
+  setTimeout(() => {
+    $loading.remove();
+  }, 250);
+
   init();
 });
 
