@@ -25,23 +25,38 @@ const DEBOUNCED = {
   enter: false
 };
 
+const getFirstEntry = (sortedArr) => {
+  const active = head(sortedArr);
+  if (active) {
+    const computed = window.getComputedStyle(active.target);
+    const { visibility, opacity } = computed;
+
+    if (visibility === 'hidden' || opacity === 0) {
+      console.log('hidden element');
+      return getFirstEntry(sortedArr.shift());
+    }
+  }
+  return active;
+}
 
 const calcNextEntryBy = ({activeEntries, currentEntry, filterFn, priorityFn}) => {
   let filteredOnlySameRow = activeEntries.filter(filterFn);
 
-  const filtered = filteredOnlySameRow.map(item => {
+  const filteredArr = filteredOnlySameRow.map(item => {
     return {
       ...item,
       distance: calcDistanceBy(currentEntry.centerX, currentEntry.centerY, item.centerX, item.centerY)
     }
   });
 
-  const mapped = filtered.map(priorityFn);
-  const sorted = mapped.sortBy(['priority', 'distance']);
-  const active = sorted.head();
+  const mappedArr = filteredArr.map(priorityFn);
+  const sortedArr = mappedArr.sortBy(['priority', 'distance']);
+  const active = getFirstEntry(sortedArr);
+
   const scrollY = getScrollY();
 
-  debugPoints(sorted, scrollY);
+  debugPoints(sortedArr, scrollY);
+
   return active;
 }
 
@@ -55,7 +70,7 @@ class Keyboard {
     this.$container = null;
 
     const layout = createLayout();
-    console.log('layout', layout);
+
     this.$indicator = layout.$indicator;
     this.bindedElements = layout.arrows;
     this.bindPress();
@@ -90,7 +105,10 @@ class Keyboard {
     const { top, left, width, height } = nextEntry;
     const scrollY = getScrollY();
 
-    const transform = `translate(${left}px, ${scrollY + top}px)`; 
+    const transform = `translate(${left}px, ${scrollY + top}px)`;
+    
+    nextEntry.target.focus();
+    
     $indicator.style.transform = transform; 
     $indicator.style.width = width + 'px';
     $indicator.style.height = height + 'px'; 
@@ -116,17 +134,17 @@ class Keyboard {
   calcNextEntry({activeEntries, currentEntry, direction}) {
     if (!currentEntry) {
       currentEntry = head(activeEntries);
-    }
+    };
 
     switch (direction) {
       case 'enter': {
-        const $target = currentEntry.$target;
+        const $target = currentEntry.target;
         const tagName = $target.tagName;
 
         if (tagName.toLowerCase() === 'input') {
           $target.focus();
         } else {
-          $target.click()
+          $target.click();
           this.unFocus();
         } 
 
@@ -279,7 +297,7 @@ class Keyboard {
   }
 
   bindPress () {
-    window.addEventListener('keydown', (evt) => {
+    document.body.addEventListener('keydown', (evt) => {
       const keyCode = evt.keyCode;
 
       if (keyCode in KEYMAPPING) {
@@ -287,11 +305,12 @@ class Keyboard {
         this.navigate(direction);
 
         this.animateArrow(direction);
+        evt.stopPropagation();
         evt.preventDefault();
       }
     });
 
-    window.addEventListener('keyup', (evt) => {
+    document.addEventListener('keyup', (evt) => {
       const keyCode = evt.keyCode;
 
       if (keyCode in KEYMAPPING) {
