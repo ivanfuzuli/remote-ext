@@ -21,10 +21,8 @@ function init() {
   keyboard.recalculateEntriesCoordinates = recalculateEntriesCoordinates;
   keyboard.recalculateEntryCoordinate = recalculateEntryCoordinate;
 
-  function updateObservers() {
-    const newAllItems = document.querySelectorAll('a');
-    const diff = difference(newAllItems, allItems);
-    diff.forEach((elm) => {
+  function updateObservers(addedNodes) {
+    addedNodes.forEach((elm) => {
       observer.observe(elm);
     });
   }
