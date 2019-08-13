@@ -19,10 +19,14 @@ function bindIntersectionObservers() {
       const { top, left, width, height } = entry.boundingClientRect;
       const centerX = left + width / 2;
       const centerY = top + height / 2;
+      const right = left + width;
+      const bottom = top + height;
 
       return {
         top,
         left,
+        right,
+        bottom,
         centerX,
         centerY,
         height,

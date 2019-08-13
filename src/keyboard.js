@@ -1,7 +1,6 @@
 import debounce from 'lodash/debounce';
 import head from 'lodash/head';
 
-import { createLayout } from './layout.js';
 import debugPoints from './debug-points.js';
 
 import { initExtendArray, calcDistanceBy } from './helpers.js';
@@ -25,40 +24,6 @@ const DEBOUNCED = {
   enter: false
 };
 
-const getFirstEntry = (sortedArr) => {
-  const active = head(sortedArr);
-  if (active) {
-    const computed = window.getComputedStyle(active.target);
-    const { visibility, opacity } = computed;
-
-    if (visibility === 'hidden' || opacity === 0) {
-      console.log('hidden element');
-      return getFirstEntry(sortedArr.shift());
-    }
-  }
-  return active;
-}
-
-const calcNextEntryBy = ({activeEntries, currentEntry, filterFn, priorityFn}) => {
-  let filteredOnlySameRow = activeEntries.filter(filterFn);
-
-  const filteredArr = filteredOnlySameRow.map(item => {
-    return {
-      ...item,
-      distance: calcDistanceBy(currentEntry.centerX, currentEntry.centerY, item.centerX, item.centerY)
-    }
-  });
-
-  const mappedArr = filteredArr.map(priorityFn);
-  const sortedArr = mappedArr.sortBy(['priority', 'distance']);
-  const active = getFirstEntry(sortedArr);
-
-  const scrollY = getScrollY();
-
-  debugPoints(sortedArr, scrollY);
-
-  return active;
-}
 
 class Keyboard {
   constructor () {
@@ -69,26 +34,10 @@ class Keyboard {
 
     this.$container = null;
 
-    const layout = createLayout();
+    //this.bindPress();
 
-    this.$indicator = layout.$indicator;
-    this.bindedElements = layout.arrows;
-    this.bindPress();
   }
 
-  setCurrentDefault() {
-    if (!this.currentEntry) {
-      const { activeEntries } = this.getFilteredEntries();
-      const sorted = activeEntries.sortBy(['left', 'top']);
-
-      this.currentEntry = head(sorted);
-      this.focus(this.currentEntry);
-
-      return true;
-    }
-
-    return false;
-  }
 
   createLine() {
     const viewportX = window.innerHeight;
@@ -106,13 +55,15 @@ class Keyboard {
     const scrollY = getScrollY();
 
     const transform = `translate(${left}px, ${scrollY + top}px)`;
-    
-    nextEntry.target.focus();
-    
+        
     $indicator.style.transform = transform; 
     $indicator.style.width = width + 'px';
     $indicator.style.height = height + 'px'; 
     $indicator.style.opacity = 1;
+
+    var event = new Event('mouseover');
+    const video = document.querySelector('.ytd-player');
+    video.dispatchEvent(event);
 
     this.createLine(nextEntry);
   }
@@ -130,11 +81,12 @@ class Keyboard {
     this.focus(reset);
   }
 
-
   calcNextEntry({activeEntries, currentEntry, direction}) {
     if (!currentEntry) {
       currentEntry = head(activeEntries);
     };
+
+    var distanceFunction = generateDistanceFunction(currentEntry);
 
     switch (direction) {
       case 'enter': {
@@ -157,25 +109,10 @@ class Keyboard {
           filterFn: item => {
             return currentEntry.centerX > item.centerX;
           },
-          priorityFn: (item) => {
-            const min = currentEntry.top;
-            const max = currentEntry.top + currentEntry.height;
-            
-            let priority = 0;
-
-            if (max > item.centerY && min < item.centerY) {
-              priority = -1;
-            }
-
-            if (currentEntry.centerY === item.centerY) {
-              priority = -1;
-            }
-
-            return {
-                ...item,
-                priority
-              }
-          }
+          priorities: [
+            distanceFunction.nearPlumbLineIsBetter,
+            distanceFunction.topIsBetter
+          ]
         });
       }
 
@@ -217,16 +154,16 @@ class Keyboard {
             return currentEntry.centerY < item.centerY
           },
           priorityFn: (item) => {
-            const min = currentEntry.left;
-            const max = currentEntry.left + currentEntry.width;
+            const currentLeft = currentEntry.left;
+            const currentRight = currentEntry.left + currentEntry.width;
             
             let priority = 0;
             if (currentEntry.centerX === item.centerX) {
-              priority = -1;
+              priority -= 100;
             }
 
-            if (max > item.centerX && min < item.centerX) {
-              /// priority = -1;
+            if (currentRight > item.centerX && currentLeft < item.centerX) {
+               priority -= 10;
             }
 
             return {
@@ -328,14 +265,6 @@ class Keyboard {
     });
   }
 
-  unAnimateArrow(direction) {
-    const elm = this.bindedElements[direction];
-    elm.classList.remove('can-layout__active');
-  }
-  animateArrow(direction) {
-    const elm = this.bindedElements[direction];
-    elm.classList.add('can-layout__active');
-  }
 }
 
 export default Keyboard;
