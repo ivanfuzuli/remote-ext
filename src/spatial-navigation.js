@@ -39,18 +39,24 @@
 
   var EVENT_PREFIX = 'sn:';
 
-  var activeElements = [];
   var currentFocusedElement = null;
+  var focusListeners = [];
+  var getFilteredElements = null;
 
   /********************/
   /* Private Variable */
   /********************/
   var _ready = false;
 
-
   /*****************/
   /* Core Function */
   /*****************/
+  function getActiveElements() {
+   const entries = getFilteredElements();
+   const mapped = entries.activeElements.map(item => item.target);
+   return mapped;
+  }
+
   function getRect(elem) {
     var cr = elem.getBoundingClientRect();
     var rect = {
@@ -386,14 +392,6 @@
     return dest;
   }
 
-
-
-  function parseSelector(selector) {
-    var result = [].slice.call(document.querySelectorAll(selector));
-
-    return result;
-  }
-
   function isNavigable(elem) {
     if (! elem ) {
       return false;
@@ -432,13 +430,18 @@
       if (!fireEvent(elem, 'willfocus', focusProperties)) {
         return false;
       }
-      elem.focus();
+
+      focusListeners.map((fn) => {
+        fn(elem);
+      });
+
       setCurrentFocusedElement(elem);
       fireEvent(elem, 'focused', focusProperties, false);
       return true;
     }
   }
   function focusNext(direction) {
+    const activeElements = getActiveElements();
     var next = navigate(
       direction,
       without(activeElements, currentFocusedElement)
@@ -447,11 +450,11 @@
     if (next) {
       focusElement(next, direction);
     }
+
     return false;
   }
 
   function onKeyDown(evt) {
-    console.log('keydown');
     var preventDefault = function() {
       evt.preventDefault();
       evt.stopPropagation();
@@ -471,7 +474,9 @@
     }
 
     if (!currentFocusedElement) {
-      return;
+      const activeItems = getActiveElements();
+      currentFocusedElement = head(activeItems);
+      if (!currentFocusedElement) return;
     }
 
 
@@ -484,7 +489,6 @@
       focusNext(direction);
     }
     
-    console.log('pw default');
     return preventDefault();
   }
 
@@ -499,25 +503,25 @@
       }
     },
 
-    add: function(config) {
-      activeElements = parseSelector(config.selector);
-      if (!currentFocusedElement) {
-        currentFocusedElement = head(activeElements);
-      }
+    addFocusListener(fn) {
+      focusListeners.push(fn);
     },
 
+    bindFilteredEntries(fn) {
+      getFilteredElements = fn;
+    },
+  
     focus: function(elem) {
-      debugger;
       if (!elem) {
+        const activeElements = getActiveElements();
+        console.log('a', activeElements);
+        currentFocusedElement = head(activeElements);
         elem = currentFocusedElement;
       }
       var result = false;
       if (isNavigable(elem)) {
-        console.log('yes');
         result = focusElement(elem);
-      } else {
-        console.log('nooo');
-      } 
+      }
       return result;
     }
   };

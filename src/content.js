@@ -1,35 +1,23 @@
-import difference from 'lodash/difference';
-import Keyboard from './keyboard.js';
 import bindIntersectionObservers from './intersection-observer.js';
 import domObserver from './dom-observer.js';
 import SpatialNavigation from './spatial-navigation.js';
-
+import FocusIndicator from './focus-indicator.js';
 
 import './content.css';
 
 function init() {
 
+  FocusIndicator.init();
   SpatialNavigation.init();
-  // Define navigable elements (anchors and elements with "focusable" class).
-  SpatialNavigation.add({
-    selector: 'a, .focusable'
-  });
+  SpatialNavigation.addFocusListener(FocusIndicator.move);
 
-  // Focus the first navigable element.
-  SpatialNavigation.focus();
-
-  const keyboard = new Keyboard();
-
-  const allItems = document.querySelectorAll('a');
   let { observer, 
-        getFilteredEntries, 
-        recalculateEntriesCoordinates, 
-        recalculateEntryCoordinate } = bindIntersectionObservers();
+        getFilteredEntries
+      } = bindIntersectionObservers();
 
-  keyboard.getFilteredEntries = getFilteredEntries;
-  keyboard.recalculateEntriesCoordinates = recalculateEntriesCoordinates;
-  keyboard.recalculateEntryCoordinate = recalculateEntryCoordinate;
-
+  SpatialNavigation.bindFilteredEntries(getFilteredEntries);
+  
+  
   function updateObservers(addedNodes) {
     addedNodes.forEach((elm) => {
       observer.observe(elm);
@@ -37,6 +25,9 @@ function init() {
   }
 
   domObserver(updateObservers);
+
+  // Focus the first navigable element.
+  SpatialNavigation.focus();
 }
 
 

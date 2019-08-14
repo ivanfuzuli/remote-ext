@@ -17,7 +17,7 @@
   border-radius: 5px;
 }
 
-.can-selected {
+.focus-indicator {
   position: absolute;
   z-index: 99999;
   
