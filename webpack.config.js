@@ -8,6 +8,11 @@ module.exports = {
     content: './src/content.js',
     background: './src/background.js'
   },
+  devtool: false,
+  
+  plugins: [
+    new webpack.SourceMapDevToolPlugin({})
+  ],
 
   module: {
     rules: [
