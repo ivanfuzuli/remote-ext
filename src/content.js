@@ -1,41 +1,31 @@
-import difference from 'lodash/difference';
-import Keyboard from './keyboard.js';
 import bindIntersectionObservers from './intersection-observer.js';
 import domObserver from './dom-observer.js';
+import SpatialNavigation from './spatial-navigation.js';
+import FocusIndicator from './focus-indicator.js';
 
-import { createLoading } from './layout.js';
 import './content.css';
 
-const $loading = createLoading();
-
 function init() {
-  const keyboard = new Keyboard();
 
-  const allItems = document.querySelectorAll('a');
-  let { observer, 
-        getFilteredEntries, 
-        recalculateEntriesCoordinates, 
-        recalculateEntryCoordinate } = bindIntersectionObservers();
+  FocusIndicator.init();
+  SpatialNavigation.init();
 
-  keyboard.getFilteredEntries = getFilteredEntries;
-  keyboard.recalculateEntriesCoordinates = recalculateEntriesCoordinates;
-  keyboard.recalculateEntryCoordinate = recalculateEntryCoordinate;
-
+  let { observer } = bindIntersectionObservers();
+  
   function updateObservers(addedNodes) {
     addedNodes.forEach((elm) => {
       observer.observe(elm);
     });
   }
-  
+
   domObserver(updateObservers);
+
+  // Focus the first navigable element.
+  SpatialNavigation.focus();
 }
 
 
 window.addEventListener('load', () => {
-  setTimeout(() => {
-    $loading.remove();
-  }, 250);
-
   init();
 });
 
