@@ -1,9 +1,20 @@
 import unionBy from 'lodash/unionBy';
+import SpatialNavigation from './spatial-navigation.js';
 
 function bindIntersectionObservers() {
+
   const domItems = document.querySelectorAll('a, button, input');
-  let activeEntries = [];
-  let passiveEntries = [];
+  let activeElements = [];
+  let passiveElements = [];
+
+  const getFilteredEntries = () => {
+    return {
+      activeElements,
+      passiveElements,
+    };
+  }
+
+  SpatialNavigation.bindFilteredEntries(getFilteredEntries);
 
   const interSectionOptions = {
     root: null,
@@ -13,33 +24,21 @@ function bindIntersectionObservers() {
 
   const interSectionCB = (entries) => {
     const mappedEntries = entries.map(entry => {
-      const target = entry.target;
-      const isIntersecting = entry.isIntersecting;
-      const intersectionRatio = entry.intersectionRatio;
-      const { top, left, width, height } = entry.boundingClientRect;
-      const centerX = left + width / 2;
-      const centerY = top + height / 2;
-
       return {
-        top,
-        left,
-        centerX,
-        centerY,
-        height,
-        width,
-        isIntersecting,
-        target,
-        intersectionRatio
+        target: entry.target,
+        isIntersecting: entry.isIntersecting
       };
     });
-
-    const unionEntries = unionBy(mappedEntries, activeEntries, item => item.target);
-    activeEntries = unionEntries
+  
+    const unionEntries = unionBy(mappedEntries, activeElements, item => item.target);
+    activeElements = unionEntries
                       .filter(item => item.isIntersecting);
     
-    passiveEntries = unionEntries
-                        .filter(item => item.isIntersecting === false);
- };
+    passiveElements = unionEntries
+                        .filter(item => item.isIntersecting === false)
+
+
+    };
 
   
   const observer = new IntersectionObserver(interSectionCB, interSectionOptions);
@@ -48,34 +47,7 @@ function bindIntersectionObservers() {
     observer.observe(link);
   });
 
-  const recalculateEntryCoordinate = entry => {
-    const { top, left, width, height } = entry.target.getBoundingClientRect();
-    
-    const centerX = left + width / 2;
-    const centerY = top + height / 2;
-
-    return {
-      ...entry,
-      centerX,
-      centerY,
-      top,
-      left
-    }
-  };
-
-  const recalculateEntriesCoordinates = () => {
-    activeEntries = activeEntries.map(recalculateEntryCoordinate);
-  };
-  const getFilteredEntries = () => {
-    return {
-      activeEntries,
-      passiveEntries,
-    };
-  }
-
   return {
-    recalculateEntriesCoordinates,
-    recalculateEntryCoordinate,
     getFilteredEntries,
     observer
   }

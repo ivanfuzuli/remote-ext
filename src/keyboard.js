@@ -1,7 +1,6 @@
 import debounce from 'lodash/debounce';
 import head from 'lodash/head';
 
-import { createLayout } from './layout.js';
 import debugPoints from './debug-points.js';
 
 import { initExtendArray, calcDistanceBy } from './helpers.js';
@@ -26,25 +25,6 @@ const DEBOUNCED = {
 };
 
 
-const calcNextEntryBy = ({activeEntries, currentEntry, filterFn, priorityFn}) => {
-  let filteredOnlySameRow = activeEntries.filter(filterFn);
-
-  const filtered = filteredOnlySameRow.map(item => {
-    return {
-      ...item,
-      distance: calcDistanceBy(currentEntry.centerX, currentEntry.centerY, item.centerX, item.centerY)
-    }
-  });
-
-  const mapped = filtered.map(priorityFn);
-  const sorted = mapped.sortBy(['priority', 'distance']);
-  const active = sorted.head();
-  const scrollY = getScrollY();
-
-  debugPoints(sorted, scrollY);
-  return active;
-}
-
 class Keyboard {
   constructor () {
     this.currentEntry = null;
@@ -54,26 +34,10 @@ class Keyboard {
 
     this.$container = null;
 
-    const layout = createLayout();
-    console.log('layout', layout);
-    this.$indicator = layout.$indicator;
-    this.bindedElements = layout.arrows;
-    this.bindPress();
+    //this.bindPress();
+
   }
 
-  setCurrentDefault() {
-    if (!this.currentEntry) {
-      const { activeEntries } = this.getFilteredEntries();
-      const sorted = activeEntries.sortBy(['left', 'top']);
-
-      this.currentEntry = head(sorted);
-      this.focus(this.currentEntry);
-
-      return true;
-    }
-
-    return false;
-  }
 
   createLine() {
     const viewportX = window.innerHeight;
@@ -90,11 +54,16 @@ class Keyboard {
     const { top, left, width, height } = nextEntry;
     const scrollY = getScrollY();
 
-    const transform = `translate(${left}px, ${scrollY + top}px)`; 
+    const transform = `translate(${left}px, ${scrollY + top}px)`;
+        
     $indicator.style.transform = transform; 
     $indicator.style.width = width + 'px';
     $indicator.style.height = height + 'px'; 
     $indicator.style.opacity = 1;
+
+    var event = new Event('mouseover');
+    const video = document.querySelector('.ytd-player');
+    video.dispatchEvent(event);
 
     this.createLine(nextEntry);
   }
@@ -112,21 +81,22 @@ class Keyboard {
     this.focus(reset);
   }
 
-
   calcNextEntry({activeEntries, currentEntry, direction}) {
     if (!currentEntry) {
       currentEntry = head(activeEntries);
-    }
+    };
+
+    var distanceFunction = generateDistanceFunction(currentEntry);
 
     switch (direction) {
       case 'enter': {
-        const $target = currentEntry.$target;
+        const $target = currentEntry.target;
         const tagName = $target.tagName;
 
         if (tagName.toLowerCase() === 'input') {
           $target.focus();
         } else {
-          $target.click()
+          $target.click();
           this.unFocus();
         } 
 
@@ -139,25 +109,10 @@ class Keyboard {
           filterFn: item => {
             return currentEntry.centerX > item.centerX;
           },
-          priorityFn: (item) => {
-            const min = currentEntry.top;
-            const max = currentEntry.top + currentEntry.height;
-            
-            let priority = 0;
-
-            if (max > item.centerY && min < item.centerY) {
-              priority = -1;
-            }
-
-            if (currentEntry.centerY === item.centerY) {
-              priority = -1;
-            }
-
-            return {
-                ...item,
-                priority
-              }
-          }
+          priorities: [
+            distanceFunction.nearPlumbLineIsBetter,
+            distanceFunction.topIsBetter
+          ]
         });
       }
 
@@ -199,16 +154,16 @@ class Keyboard {
             return currentEntry.centerY < item.centerY
           },
           priorityFn: (item) => {
-            const min = currentEntry.left;
-            const max = currentEntry.left + currentEntry.width;
+            const currentLeft = currentEntry.left;
+            const currentRight = currentEntry.left + currentEntry.width;
             
             let priority = 0;
             if (currentEntry.centerX === item.centerX) {
-              priority = -1;
+              priority -= 100;
             }
 
-            if (max > item.centerX && min < item.centerX) {
-              /// priority = -1;
+            if (currentRight > item.centerX && currentLeft < item.centerX) {
+               priority -= 10;
             }
 
             return {
@@ -279,7 +234,7 @@ class Keyboard {
   }
 
   bindPress () {
-    window.addEventListener('keydown', (evt) => {
+    document.body.addEventListener('keydown', (evt) => {
       const keyCode = evt.keyCode;
 
       if (keyCode in KEYMAPPING) {
@@ -287,11 +242,12 @@ class Keyboard {
         this.navigate(direction);
 
         this.animateArrow(direction);
+        evt.stopPropagation();
         evt.preventDefault();
       }
     });
 
-    window.addEventListener('keyup', (evt) => {
+    document.addEventListener('keyup', (evt) => {
       const keyCode = evt.keyCode;
 
       if (keyCode in KEYMAPPING) {
@@ -309,14 +265,6 @@ class Keyboard {
     });
   }
 
-  unAnimateArrow(direction) {
-    const elm = this.bindedElements[direction];
-    elm.classList.remove('can-layout__active');
-  }
-  animateArrow(direction) {
-    const elm = this.bindedElements[direction];
-    elm.classList.add('can-layout__active');
-  }
 }
 
 export default Keyboard;
