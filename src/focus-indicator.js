@@ -1,9 +1,14 @@
+import SpatialNavigation from './spatial-navigation.js';
+
 let $indicator;
 
 const init = () => {
   $indicator = document.createElement('div');
   $indicator.classList.add('focus-indicator');
   document.body.appendChild($indicator);
+
+  SpatialNavigation.addFocusListener(move);
+
 }
 
 const move = (elem) => {
@@ -22,8 +27,6 @@ const move = (elem) => {
     $indicator.style.width = width + 'px';
     $indicator.style.height = height + 'px'; 
     $indicator.style.opacity = 1;
-
-    console.log('elem', elem, 'indicator', $indicator, left);
   });
 } 
 

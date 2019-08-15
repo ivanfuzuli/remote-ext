@@ -9,14 +9,8 @@ function init() {
 
   FocusIndicator.init();
   SpatialNavigation.init();
-  SpatialNavigation.addFocusListener(FocusIndicator.move);
 
-  let { observer, 
-        getFilteredEntries
-      } = bindIntersectionObservers();
-
-  SpatialNavigation.bindFilteredEntries(getFilteredEntries);
-  
+  let { observer } = bindIntersectionObservers();
   
   function updateObservers(addedNodes) {
     addedNodes.forEach((elm) => {

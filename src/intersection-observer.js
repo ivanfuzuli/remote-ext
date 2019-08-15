@@ -1,9 +1,20 @@
 import unionBy from 'lodash/unionBy';
+import SpatialNavigation from './spatial-navigation.js';
 
 function bindIntersectionObservers() {
+
   const domItems = document.querySelectorAll('a, button, input');
   let activeElements = [];
   let passiveElements = [];
+
+  const getFilteredEntries = () => {
+    return {
+      activeElements,
+      passiveElements,
+    };
+  }
+
+  SpatialNavigation.bindFilteredEntries(getFilteredEntries);
 
   const interSectionOptions = {
     root: null,
@@ -35,13 +46,6 @@ function bindIntersectionObservers() {
   domItems.forEach((link) => {
     observer.observe(link);
   });
-
-  const getFilteredEntries = () => {
-    return {
-      activeElements,
-      passiveElements,
-    };
-  }
 
   return {
     getFilteredEntries,

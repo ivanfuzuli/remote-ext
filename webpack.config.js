@@ -6,7 +6,6 @@ module.exports = {
   mode: "production",
   entry: {
     content: './src/content.js',
-    background: './src/background.js'
   },
   devtool: false,
   
