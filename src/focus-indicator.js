@@ -1,5 +1,5 @@
 import SpatialNavigation from './spatial-navigation.js';
-
+import { getScrollY } from './viewport.js';
 let $indicator;
 
 const init = () => {
@@ -21,7 +21,8 @@ const move = (elem) => {
   } = cr;
 
   window.requestAnimationFrame(() => {
-    const transform = `translate(${left}px, ${top}px)`;
+    const scrollY = getScrollY();
+    const transform = `translate(${left}px, ${scrollY + top}px)`;
 
     $indicator.style.transform = transform; 
     $indicator.style.width = width + 'px';

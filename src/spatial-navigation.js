@@ -20,7 +20,8 @@
   
   import head from 'lodash/head';
   import without from 'lodash/without';
-
+  import { scroller } from './viewport.js';
+  import { getRect } from './helpers.js';
   var GlobalConfig = {
     selector: '',           // can be a valid <extSelector> except "@" syntax.
     straightOverlapThreshold: 0.5,
@@ -55,26 +56,6 @@
    const entries = getFilteredElements();
    const mapped = entries.activeElements.map(item => item.target);
    return mapped;
-  }
-
-  function getRect(elem) {
-    var cr = elem.getBoundingClientRect();
-    var rect = {
-        left: cr.left,
-        top: cr.top,
-        right: cr.right,
-        bottom: cr.bottom,
-        width: cr.width,
-        height: cr.height
-    };
-    rect.element = elem;
-    rect.center = {
-      x: rect.left + Math.floor(rect.width / 2),
-      y: rect.top + Math.floor(rect.height / 2)
-    };
-    rect.center.left = rect.center.right = rect.center.x;
-    rect.center.top = rect.center.bottom = rect.center.y;
-    return rect;
   }
 
   function partition(rects, targetRect, straightOverlapThreshold) {
@@ -448,7 +429,12 @@
     );
 
     if (next) {
-      focusElement(next, direction);
+      const scrollPromise = scroller(next, direction);
+      scrollPromise.then(() => {
+        focusElement(next, direction);
+      }).catch(() => {
+        console.log('promise failed');
+      });
     }
 
     return false;
@@ -503,6 +489,8 @@
       }
     },
 
+    getRect,
+
     addFocusListener(fn) {
       focusListeners.push(fn);
     },
@@ -514,7 +502,6 @@
     focus: function(elem) {
       if (!elem) {
         const activeElements = getActiveElements();
-        console.log('a', activeElements);
         currentFocusedElement = head(activeElements);
         elem = currentFocusedElement;
       }
