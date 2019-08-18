@@ -1,6 +1,7 @@
 import bindIntersectionObservers from './intersection-observer.js';
 import domObserver from './dom-observer.js';
 import SpatialNavigation from './spatial-navigation.js';
+import DesktopAdaptor from './adaptors/desktop.js';
 import FocusIndicator from './focus-indicator.js';
 
 import './content.css';
@@ -8,7 +9,7 @@ import './content.css';
 function init() {
 
   FocusIndicator.init();
-  SpatialNavigation.init();
+  DesktopAdaptor.init();
 
   let { observer, 
         getFilteredEntries

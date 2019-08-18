@@ -30,13 +30,6 @@
   /*********************/
   /* Constant Variable */
   /*********************/
-  var KEYMAPPING = {
-    '37': 'left',
-    '38': 'up',
-    '39': 'right',
-    '40': 'down'
-  };
-
 
   var EVENT_PREFIX = 'sn:';
 
@@ -374,13 +367,11 @@
   }
 
   function isNavigable(elem) {
-    console.log('isNavigable');
     if (! elem ) {
       return false;
     }
 
     var computedStyle = window.getComputedStyle(elem);
-    console.log('cs', computedStyle);
     if ((elem.offsetWidth <= 0 && elem.offsetHeight <= 0) ||
         computedStyle.getPropertyValue('opacity') === 0 || 
         computedStyle.getPropertyValue('visibility') == 'hidden' ||
@@ -400,6 +391,11 @@
     var evt = document.createEvent('CustomEvent');
     evt.initCustomEvent(EVENT_PREFIX + type, true, cancelable, details);
     return elem.dispatchEvent(evt);
+  }
+
+  function dispatchMoveEvent(elem) {
+    const mouseMoveEvent = new Event('mousemove');
+    elem.dispatchEvent(mouseMoveEvent);
   }
 
   function setCurrentFocusedElement(elem) {
@@ -425,7 +421,9 @@
         fn(elem);
       });
 
+      dispatchMoveEvent(elem);
       setCurrentFocusedElement(elem);
+      
       fireEvent(elem, 'focused', focusProperties, false);
       return true;
     }
@@ -449,20 +447,12 @@
     return false;
   }
 
-  function onKeyDown(evt) {
-    var preventDefault = function() {
-      evt.preventDefault();
-      evt.stopPropagation();
-      return false;
-    };
 
-    var direction = KEYMAPPING[evt.keyCode];
-    if (!direction) {
-      if (evt.keyCode == 13) {
-        if (currentFocusedElement) {
-          if (!fireEvent(currentFocusedElement, 'enter-down')) {
-            return preventDefault();
-          }
+  function move(direction, preventDefault) {
+    if (direction === 'enter') {
+      if (currentFocusedElement) {
+        if (!fireEvent(currentFocusedElement, 'enter-down')) {
+          return preventDefault();
         }
       }
       return;
@@ -486,19 +476,11 @@
     
     return preventDefault();
   }
-
   /*******************/
   /* Public Function */
   /*******************/
   var SpatialNavigation = {
-    init: function() {
-      if (!_ready) {
-        document.addEventListener('keydown', onKeyDown, true);
-        _ready = true;
-      }
-    },
-
-    getRect,
+    move,
 
     addFocusListener(fn) {
       focusListeners.push(fn);

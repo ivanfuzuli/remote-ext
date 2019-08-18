@@ -10,7 +10,7 @@ let untilScrollY = 0;
 let resolvers = [];
 
 const getScrollY = () => {
-  return scrollY;
+  return window.scrollY;
 }
 
 const getDocHeight = () => {
