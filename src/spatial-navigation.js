@@ -374,13 +374,21 @@
   }
 
   function isNavigable(elem) {
+    console.log('isNavigable');
     if (! elem ) {
       return false;
     }
+
+    var computedStyle = window.getComputedStyle(elem);
+    console.log('cs', computedStyle);
     if ((elem.offsetWidth <= 0 && elem.offsetHeight <= 0) ||
-        elem.hasAttribute('disabled')) {
+        computedStyle.getPropertyValue('opacity') === 0 || 
+        computedStyle.getPropertyValue('visibility') == 'hidden' ||
+        computedStyle.getPropertyValue('display') == 'none' ||
+        elem.hasAttribute('aria-hidden')) {
       return false;
     }
+
     return true;
   }
 
@@ -388,6 +396,7 @@
     if (arguments.length < 4) {
       cancelable = true;
     }
+
     var evt = document.createEvent('CustomEvent');
     evt.initCustomEvent(EVENT_PREFIX + type, true, cancelable, details);
     return elem.dispatchEvent(evt);
@@ -484,7 +493,7 @@
   var SpatialNavigation = {
     init: function() {
       if (!_ready) {
-        window.addEventListener('keydown', onKeyDown);
+        document.addEventListener('keydown', onKeyDown, true);
         _ready = true;
       }
     },
