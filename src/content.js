@@ -2,15 +2,19 @@ import bindIntersectionObservers from './intersection-observer.js';
 import domObserver from './dom-observer.js';
 import SpatialNavigation from './spatial-navigation.js';
 import DesktopAdaptor from './adaptors/desktop.js';
+
 import FocusIndicator from './focus-indicator.js';
+import VideoIndicator from './video-indicator.js';
 
 import './content.css';
 
 function init() {
 
   FocusIndicator.init();
-  DesktopAdaptor.init();
+  VideoIndicator.init();
 
+  DesktopAdaptor.init();
+  
   let { observer, 
         getFilteredEntries
       } = bindIntersectionObservers();
@@ -33,11 +37,4 @@ function init() {
 
 window.addEventListener('load', () => {
   init();
-});
-
-// TODO: Only development
-window.addEventListener('keypress', (e) => {
-  if (e.key === 'r') {
-    window.location = 'http://reload.extensions';
-  } 
 });

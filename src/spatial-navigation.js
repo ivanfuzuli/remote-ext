@@ -394,7 +394,7 @@
   }
 
   function dispatchMoveEvent(elem) {
-    const mouseMoveEvent = new Event('mousemove');
+    const mouseMoveEvent = new Event('mousemove',  { bubbles: true, cancelable: true } );
     elem.dispatchEvent(mouseMoveEvent);
   }
 
@@ -451,7 +451,10 @@
   function move(direction, preventDefault) {
     if (direction === 'enter') {
       if (currentFocusedElement) {
-        if (!fireEvent(currentFocusedElement, 'enter-down')) {
+        if (fireEvent(currentFocusedElement, 'enter-down')) {
+          const clickEvent = new Event('click');
+          currentFocusedElement.dispatchEvent(clickEvent);
+
           return preventDefault();
         }
       }

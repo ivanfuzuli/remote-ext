@@ -15,6 +15,7 @@
   font: Helvetica, Arial, serif;
   font-size: 11pt;
   border-radius: 5px;
+  
 }
 
 .focus-indicator {
@@ -26,4 +27,28 @@
 
   outline: 4px solid yellowgreen;
   transition: .3s;
+}
+
+.can-video-expand {
+  height: 20px;
+
+  position: absolute;
+
+  display: flex;
+  justify-content: center;
+
+  margin-top: -80px;
+}
+
+.can-video-expand span {
+  padding: 10px;
+  height: 20px;
+}
+
+.can-video-expand i {
+  display: inline-block;
+  height: 20px;
+  width: 20px;
+  fill: #fff;
+  stroke: #000;
 }

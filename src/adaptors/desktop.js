@@ -9,13 +9,22 @@ const KEYMAPPING = {
   };
 
 function onKeyDown(evt) {
-  var preventDefault = function() {
+  const preventDefault = function() {
   evt.preventDefault();
   evt.stopPropagation();
     return false;
   };
 
-  var direction = KEYMAPPING[evt.keyCode];
+
+  // @TODO only development
+  if (evt.key === 'r') {
+    window.location = 'http://reload.extensions';
+  } 
+
+  const direction = KEYMAPPING[evt.keyCode];
+  if (!direction) {
+    return;
+  }
 
   SpatialNavigation.move(direction, preventDefault);
 }

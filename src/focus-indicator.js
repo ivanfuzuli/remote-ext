@@ -12,7 +12,14 @@ const init = () => {
 }
 
 const move = (elem) => {
+  const focusChild = elem.dataset.focusChildNode;
+
+  if (focusChild) {
+    elem = elem.firstElementChild;
+  }
+
   var cr = elem.getBoundingClientRect();
+
   const {
       left,
       top,
