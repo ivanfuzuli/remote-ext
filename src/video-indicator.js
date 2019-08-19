@@ -34,7 +34,6 @@ const generateElement = ({ left, bottom, width }) => {
   $span.appendChild($i);
   $elem.appendChild($span);
   document.body.appendChild($elem);
-
   bindClick($elem);
 }
 
@@ -42,15 +41,17 @@ const init = () => {
   $video = head(document.querySelectorAll('video'));
 
   if ($video) {
-    const dimensions = getRect($video);
+    $video.addEventListener('canplay', () => {
+      const dimensions = getRect($video);
 
-    const bottomAndWidth = {
-      bottom: dimensions.bottom,
-      width: dimensions.width,
-      left: dimensions.left
-    };
-
-    generateElement(bottomAndWidth);
+      const bottomAndWidth = {
+        bottom: dimensions.bottom,
+        width: dimensions.width,
+        left: dimensions.left
+      };
+  
+      generateElement(bottomAndWidth);
+    })
   }
 }
 

@@ -20,8 +20,10 @@
   
   import head from 'lodash/head';
   import without from 'lodash/without';
+
   import { scroller } from './viewport.js';
   import { getRect } from './helpers.js';
+
   var GlobalConfig = {
     selector: '',           // can be a valid <extSelector> except "@" syntax.
     straightOverlapThreshold: 0.5,
@@ -35,20 +37,12 @@
 
   var currentFocusedElement = null;
   var focusListeners = [];
-  var getFilteredElements = null;
-
-  /********************/
-  /* Private Variable */
-  /********************/
-  var _ready = false;
 
   /*****************/
   /* Core Function */
   /*****************/
   function getActiveElements() {
-   const entries = getFilteredElements();
-   const mapped = entries.activeElements.map(item => item.target);
-   return mapped;
+   return document.querySelectorAll('a, button, input');
   }
 
   function partition(rects, targetRect, straightOverlapThreshold) {
@@ -366,19 +360,33 @@
     return dest;
   }
 
-  function isNavigable(elem) {
+  function isNavigable(elem, depth = 1) {
+    const maxDepth = 5;
+    const nextDept = depth + 1;
     if (! elem ) {
       return false;
     }
 
     var computedStyle = window.getComputedStyle(elem);
+
     if ((elem.offsetWidth <= 0 && elem.offsetHeight <= 0) ||
-        computedStyle.getPropertyValue('opacity') === 0 || 
+        computedStyle.getPropertyValue('opacity') == 0 || 
         computedStyle.getPropertyValue('visibility') == 'hidden' ||
-        computedStyle.getPropertyValue('display') == 'none' ||
-        elem.hasAttribute('aria-hidden')) {
+        computedStyle.getPropertyValue('display') == 'none'
+        ) {
       return false;
     }
+
+    const $parentNode = elem.parentNode;
+
+    if ($parentNode === document.body) {
+      return true;
+    }
+
+    if (depth < maxDepth && $parentNode) {
+      return isNavigable($parentNode, nextDept);
+    }
+    
 
     return true;
   }
@@ -428,12 +436,23 @@
       return true;
     }
   }
-  function focusNext(direction) {
+  function focusNext(direction, withoutArr = []) {
     const activeElements = getActiveElements();
+
+    if (withoutArr.length < 1) {
+      withoutArr.push(activeElements);
+      withoutArr.push(currentFocusedElement);
+    }
+
     var next = navigate(
       direction,
-      without(activeElements, currentFocusedElement)
+      without.apply(this, withoutArr)
     );
+    
+    if (next && !isNavigable(next)) {
+      withoutArr.push(next);
+      return focusNext(direction, withoutArr);
+    }
 
     if (next) {
       const scrollPromise = scroller(next, direction);
@@ -452,9 +471,8 @@
     if (direction === 'enter') {
       if (currentFocusedElement) {
         if (fireEvent(currentFocusedElement, 'enter-down')) {
-          const clickEvent = new Event('click');
+          const clickEvent = new Event('click', { bubbles: true, cancelable: true });
           currentFocusedElement.dispatchEvent(clickEvent);
-
           return preventDefault();
         }
       }
@@ -489,10 +507,6 @@
       focusListeners.push(fn);
     },
 
-    bindFilteredEntries(fn) {
-      getFilteredElements = fn;
-    },
-  
     focus: function(elem) {
       if (!elem) {
         const activeElements = getActiveElements();
