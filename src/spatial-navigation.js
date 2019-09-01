@@ -369,6 +369,10 @@
 
     var computedStyle = window.getComputedStyle(elem);
 
+    if (!elem) {
+      return false;
+    }
+
     if ((elem.offsetWidth <= 0 && elem.offsetHeight <= 0) ||
         computedStyle.getPropertyValue('opacity') == 0 || 
         computedStyle.getPropertyValue('visibility') == 'hidden' ||
@@ -467,12 +471,19 @@
   }
 
 
+  function moveCurrentFocusElement() {
+    SpatialNavigation.focus();
+    console.log('focus');
+  }
+
   function move(direction, preventDefault) {
     if (direction === 'enter') {
       if (currentFocusedElement) {
         if (fireEvent(currentFocusedElement, 'enter-down')) {
           const clickEvent = new Event('click', { bubbles: true, cancelable: true });
           currentFocusedElement.dispatchEvent(clickEvent);
+
+          moveCurrentFocusElement(currentFocusedElement);
           return preventDefault();
         }
       }
@@ -497,6 +508,16 @@
     
     return preventDefault();
   }
+
+  const getNext = (arr, index) => {
+    const nextIndex = index + 1;
+    if (nextIndex + 1 > arr.length) {
+      return false;
+    }
+
+    const next = arr[nextIndex];
+    return next;
+  }
   /*******************/
   /* Public Function */
   /*******************/
@@ -507,16 +528,25 @@
       focusListeners.push(fn);
     },
 
-    focus: function(elem) {
+    focus: function(elem, index = 0) {
       if (!elem) {
         const activeElements = getActiveElements();
         currentFocusedElement = head(activeElements);
         elem = currentFocusedElement;
       }
+
       var result = false;
       if (isNavigable(elem)) {
         result = focusElement(elem);
+      } else {
+        const activeElements = getActiveElements();
+        index = index + 1;
+        const next = getNext(activeElements, index);
+
+        if (!next) return;
+        this.focus(next, index);
       }
+
       return result;
     }
   };

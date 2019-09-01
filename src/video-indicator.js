@@ -39,7 +39,6 @@ const generateElement = ({ left, bottom, width }) => {
 
 const init = () => {
   $video = head(document.querySelectorAll('video'));
-
   if ($video) {
     $video.addEventListener('canplay', () => {
       const dimensions = getRect($video);
