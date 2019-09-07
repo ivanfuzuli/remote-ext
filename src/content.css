@@ -30,13 +30,14 @@
 }
 
 .can-video-expand {
-  height: 20px;
+  height: 50px;
   position: absolute;
 
   display: flex;
   justify-content: center;
 
   margin-top: -80px;
+
 }
 
 .can-video-expand span {

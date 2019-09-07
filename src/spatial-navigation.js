@@ -25,6 +25,7 @@
   import { getRect } from './helpers.js';
 
   var GlobalConfig = {
+    MyInterSectionInstance: null,
     selector: '',           // can be a valid <extSelector> except "@" syntax.
     straightOverlapThreshold: 0.5,
   };
@@ -41,7 +42,7 @@
   /*****************/
   /* Core Function */
   /*****************/
-  function getActiveElements() {
+  function getActiveElements() {  
    return document.querySelectorAll('a, button, input');
   }
 
@@ -442,7 +443,6 @@
   }
   function focusNext(direction, withoutArr = []) {
     const activeElements = getActiveElements();
-
     if (withoutArr.length < 1) {
       withoutArr.push(activeElements);
       withoutArr.push(currentFocusedElement);
@@ -470,20 +470,27 @@
     return false;
   }
 
-
-  function moveCurrentFocusElement() {
-    SpatialNavigation.focus();
-    console.log('focus');
-  }
-
   function move(direction, preventDefault) {
+    const $focusedElem = currentFocusedElement;
     if (direction === 'enter') {
-      if (currentFocusedElement) {
-        if (fireEvent(currentFocusedElement, 'enter-down')) {
-          const clickEvent = new Event('click', { bubbles: true, cancelable: true });
-          currentFocusedElement.dispatchEvent(clickEvent);
+      if ($focusedElem) {
+        if (fireEvent($focusedElem, 'enter-down')) {
+          GlobalConfig.MyInterSectionInstance.observeWithFn({
+            target: $focusedElem,
+            onEnter: function() {
+              
+            },
+            onLeave: function() {
+              SpatialNavigation.focus();
+              this.unObserve($focusedElem);
+            },
 
-          moveCurrentFocusElement(currentFocusedElement);
+            cleaningNS: 'enter'
+          });
+
+          const clickEvent = new Event('click', { bubbles: true, cancelable: true });
+          $focusedElem.dispatchEvent(clickEvent);
+          
           return preventDefault();
         }
       }
@@ -518,16 +525,21 @@
     const next = arr[nextIndex];
     return next;
   }
+
   /*******************/
   /* Public Function */
   /*******************/
   var SpatialNavigation = {
     move,
 
+    init({MyInterSectionInstance}) {
+      GlobalConfig.MyInterSectionInstance = MyInterSectionInstance;
+    },
+  
     addFocusListener(fn) {
       focusListeners.push(fn);
     },
-
+    
     focus: function(elem, index = 0) {
       if (!elem) {
         const activeElements = getActiveElements();
@@ -544,7 +556,7 @@
         const next = getNext(activeElements, index);
 
         if (!next) return;
-        this.focus(next, index);
+        SpatialNavigation.focus(next, index);
       }
 
       return result;

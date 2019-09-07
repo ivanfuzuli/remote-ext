@@ -1,9 +1,7 @@
 import head from 'lodash/head';
 import { getRect } from './helpers.js';
 import arrow from './assets/double-arrow.svg';
-
-let $video = null;
-
+let $elem;
 
 const bindClick = ($elem) => {
   $elem.addEventListener('click', () => {
@@ -18,7 +16,7 @@ const bindClick = ($elem) => {
 }
 
 const generateElement = ({ left, bottom, width }) => {
-  const $elem = document.createElement('a');
+  $elem = document.createElement('a');
   const $span = document.createElement('span');
   const $i = document.createElement('i');
 
@@ -37,23 +35,25 @@ const generateElement = ({ left, bottom, width }) => {
   bindClick($elem);
 }
 
-const init = () => {
-  $video = head(document.querySelectorAll('video'));
+const move = ($video) => {
   if ($video) {
-    $video.addEventListener('canplay', () => {
-      const dimensions = getRect($video);
+    const dimensions = getRect($video);
 
-      const bottomAndWidth = {
-        bottom: dimensions.bottom,
-        width: dimensions.width,
-        left: dimensions.left
-      };
-  
-      generateElement(bottomAndWidth);
-    })
+    const bottomAndWidth = {
+      bottom: dimensions.bottom,
+      width: dimensions.width,
+      left: dimensions.left
+    };
+
+    generateElement(bottomAndWidth);
   }
 }
 
+const reset = () => {
+  $elem.remove();
+}
+
 export default {
-  init
+  move,
+  reset
 };
